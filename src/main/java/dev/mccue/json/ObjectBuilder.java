@@ -9,14 +9,14 @@ record ObjectBuilder(HashMap<Json.String, Json> values) implements Json.Object.B
     }
 
     @Override
-    public Json.Object.Builder put(Json.String key, Json value) {
-        this.values.put(key, value);
+    public Json.Object.Builder put(CharSequence key, Json value) {
+        this.values.put(Json.String.of(key), value);
         return this;
     }
 
     @Override
-    public Json.Object.Builder putAll(Map<Json.String, ? extends Json> values) {
-        this.values.putAll(values);
+    public Json.Object.Builder putAll(Map<? extends CharSequence, ? extends Json> values) {
+        values.forEach(this::put);
         return this;
     }
 

@@ -5,7 +5,7 @@ import java.util.stream.IntStream;
 
 record String(@Override java.lang.String value) implements Json.String {
     String {
-        Objects.requireNonNull(value, "Toml.String value must be nonnull");
+        Objects.requireNonNull(value, "Json.String value must be nonnull");
     }
     @Override
     public int length() {
@@ -35,5 +35,10 @@ record String(@Override java.lang.String value) implements Json.String {
     @Override
     public IntStream codePoints() {
         return this.value.codePoints();
+    }
+
+    @Override
+    public java.lang.String toString() {
+        return this.value;
     }
 }

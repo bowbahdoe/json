@@ -1,23 +1,57 @@
 package dev.mccue.json;
 
+import java.io.IOException;
+import java.io.PushbackReader;
+import java.io.StringReader;
+import java.io.UncheckedIOException;
 import java.math.BigDecimal;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
 public sealed interface Json {
-    sealed interface String extends Json, CharSequence permits dev.mccue.json.String {
+    static Json of(CharSequence value) {
+        return value == null ? Json.Null.instance() : Json.String.of(value);
+    }
+
+    static Json of(int value) {
+        return new dev.mccue.json.Long(value);
+    }
+
+    static Json of(Integer value) {
+        return value == null ? Json.Null.instance() : new dev.mccue.json.Long(value);
+    }
+
+    sealed interface String extends Json, CharSequence permits
+            dev.mccue.json.String {
         java.lang.String value();
 
-        static String of(java.lang.String value) {
-            return new dev.mccue.json.String(value);
+        static String of(CharSequence value) {
+            return new dev.mccue.json.String(value.toString());
         }
     }
-    sealed interface Number extends Json permits dev.mccue.json.Number {
-        BigDecimal value();
+    sealed interface Number extends Json permits
+            dev.mccue.json.BigDecimal,
+            dev.mccue.json.Double,
+            dev.mccue.json.Long,
+            dev.mccue.json.BigInteger {
+        BigDecimal bigDecimalValue();
+
+        long longValue();
+
+
+        long longValueExact();
 
         static Number of(BigDecimal value) {
-            return new dev.mccue.json.Number(value);
+            return new dev.mccue.json.BigDecimal(value);
+        }
+
+        static Number of(long value) {
+            return new dev.mccue.json.Long(value);
+        }
+
+        static Number of(java.math.BigInteger value) {
+            return new dev.mccue.json.BigInteger(value);
         }
     }
 
@@ -60,11 +94,24 @@ public sealed interface Json {
         }
 
         sealed interface Builder permits ObjectBuilder {
-            Builder put(String key, Json value);
-            Builder putAll(Map<String, ? extends Json> values);
+            Builder put(CharSequence key, Json value);
+            Builder putAll(Map<? extends CharSequence, ? extends Json> values);
+
             Object build();
         }
     }
+
+    static Json parse(CharSequence jsonText) {
+        var parser = new JsonParser();
+
+        try {
+            return parser.read(new PushbackReader(new StringReader(jsonText.toString()), 64), false, new JsonParser.Options());
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        }
+    }
+
+
 }
 
 

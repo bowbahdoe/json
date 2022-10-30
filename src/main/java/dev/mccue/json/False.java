@@ -10,6 +10,6 @@ enum False implements Json.Boolean {
 
     @Override
     public java.lang.String toString() {
-        return "False";
+        return "false";
     }
 }
