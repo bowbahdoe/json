@@ -36,9 +36,4 @@ record String(@Override java.lang.String value) implements Json.String {
     public IntStream codePoints() {
         return this.value.codePoints();
     }
-
-    @Override
-    public java.lang.String toString() {
-        return this.value;
-    }
 }

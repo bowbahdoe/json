@@ -8,7 +8,7 @@ import java.math.BigInteger;
 import java.util.List;
 import java.util.Optional;
 
-public final class JsonParser {
+public final class JsonReader {
     /**
      * Expects to be called with the head of the stream AFTER the
      * initial "\\u".  Reads the next four characters from the stream.
@@ -376,7 +376,7 @@ public final class JsonParser {
         if (c == '\"') {
             var key = readQuotedString(stream);
             if ((int) ':' == nextToken(stream)) {
-                return Optional.of(Json.String.of(key));
+                return Optional.of(key);
             }
             else {
                 throw new RuntimeException("JSON error (missing `:` in object)");
@@ -399,7 +399,7 @@ public final class JsonParser {
             var key = readKey(stream).orElse(null);
             if (key != null) {
                 var value = read(stream, true, options);
-                result.put(key, value);
+                result.put(key.value(), value);
                 switch (nextToken(stream)) {
                     case ',':
                         continue;
@@ -422,7 +422,7 @@ public final class JsonParser {
     }
 
     Json read(PushbackReader stream, boolean eofError, Options options) throws IOException {
-        var c = nextToken(stream);
+        int c = nextToken(stream);
         switch (c) {
             case '-', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9' -> {
                 stream.unread(c);
@@ -477,21 +477,17 @@ public final class JsonParser {
         }
     }
 
-    sealed interface EOFBehavior {
+    public sealed interface EOFBehavior {
         record ThrowException() implements EOFBehavior {}
         record DefaultValue(Json json) implements EOFBehavior {}
     }
 
-    record Options(
+    public record Options(
             EOFBehavior eofBehavior,
             boolean useBigDecimals
     ) {
         Options() {
             this(new EOFBehavior.ThrowException(), false);
         }
-    }
-
-    public static void main(java.lang.String[] args) {
-        System.out.println(Json.parse("[123, \"a\", 9.5, {\"abc\": [1, 2, {}, \"ddd\"]}, 990000000000000000000000000000.4351235324234234, 90000000000000000000000000000, 8]]"));
     }
 }

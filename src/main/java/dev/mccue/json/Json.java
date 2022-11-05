@@ -5,48 +5,47 @@ import java.io.PushbackReader;
 import java.io.StringReader;
 import java.io.UncheckedIOException;
 import java.math.BigDecimal;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
 public sealed interface Json {
-    static Json of(CharSequence value) {
-        return value == null ? Json.Null.instance() : Json.String.of(value);
-    }
-
-    static Json of(int value) {
-        return new dev.mccue.json.Long(value);
-    }
-
-    static Json of(Integer value) {
-        return value == null ? Json.Null.instance() : new dev.mccue.json.Long(value);
-    }
-
     sealed interface String extends Json, CharSequence permits
             dev.mccue.json.String {
         java.lang.String value();
 
-        static String of(CharSequence value) {
-            return new dev.mccue.json.String(value.toString());
+        static String of(java.lang.String value) {
+            return new dev.mccue.json.String(value);
         }
     }
-    sealed interface Number extends Json permits
+
+    sealed abstract class Number extends java.lang.Number implements Json permits
             dev.mccue.json.BigDecimal,
             dev.mccue.json.Double,
             dev.mccue.json.Long,
             dev.mccue.json.BigInteger {
-        BigDecimal bigDecimalValue();
+        abstract BigDecimal bigDecimalValue();
 
-        long longValue();
-
-
-        long longValueExact();
+        abstract java.math.BigInteger bigIntegerValue();
 
         static Number of(BigDecimal value) {
             return new dev.mccue.json.BigDecimal(value);
         }
 
+        static Number of(double value) {
+            return new dev.mccue.json.Double(value);
+        }
+
         static Number of(long value) {
+            return new dev.mccue.json.Long(value);
+        }
+
+        static Number of(float value) {
+            return new dev.mccue.json.Double(value);
+        }
+
+        static Number of(int value) {
             return new dev.mccue.json.Long(value);
         }
 
@@ -69,7 +68,9 @@ public sealed interface Json {
         }
     }
     sealed interface Array extends Json, List<Json> permits dev.mccue.json.Array {
-
+        static Array of(Json... values) {
+            return new dev.mccue.json.Array(Arrays.asList(values));
+        }
         static Array of(List<Json> value) {
             return new dev.mccue.json.Array(value);
         }
@@ -84,8 +85,8 @@ public sealed interface Json {
         }
     }
 
-    sealed interface Object extends Json, Map<String, Json> permits dev.mccue.json.Object {
-        static Object of(Map<String, Json> value) {
+    sealed interface Object extends Json, Map<java.lang.String, Json> permits dev.mccue.json.Object {
+        static Object of(Map<java.lang.String, Json> value) {
             return new dev.mccue.json.Object(value);
         }
 
@@ -94,24 +95,37 @@ public sealed interface Json {
         }
 
         sealed interface Builder permits ObjectBuilder {
-            Builder put(CharSequence key, Json value);
-            Builder putAll(Map<? extends CharSequence, ? extends Json> values);
+            Builder put(java.lang.String key, Json value);
+            Builder putAll(Map<java.lang.String, ? extends Json> values);
 
             Object build();
         }
     }
 
     static Json parse(CharSequence jsonText) {
-        var parser = new JsonParser();
+        var parser = new JsonReader();
 
         try {
-            return parser.read(new PushbackReader(new StringReader(jsonText.toString()), 64), false, new JsonParser.Options());
+            return parser.read(new PushbackReader(new StringReader(jsonText.toString()), 64), false, new JsonReader.Options());
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         }
     }
 
 
+    static Json read(CharSequence jsonText, JsonReader.Options options) {
+        var parser = new JsonReader();
+
+        try {
+            return parser.read(new PushbackReader(new StringReader(jsonText.toString()), 64), false, options);
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        }
+    }
+
+    static void write(Json json, Appendable out, JsonReader.Options options) {
+
+    }
 }
 
 

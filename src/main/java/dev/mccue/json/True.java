@@ -10,6 +10,6 @@ enum True implements Json.Boolean {
 
     @Override
     public java.lang.String toString() {
-        return "True";
+        return "true";
     }
 }

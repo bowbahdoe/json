@@ -5,6 +5,6 @@ enum Null implements Json.Null {
 
     @Override
     public java.lang.String toString() {
-        return "Null";
+        return "null";
     }
 }

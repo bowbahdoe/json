@@ -8,8 +8,8 @@ import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
-record Object(Map<String, Json> value) implements Json.Object {
-    Object(Map<String, Json> value) {
+record Object(Map<java.lang.String, Json> value) implements Json.Object {
+    Object(Map<java.lang.String, Json> value) {
         Objects.requireNonNull(value, "Json.Table value must be nonnull");
         this.value = Map.copyOf(value);
     }
@@ -40,7 +40,7 @@ record Object(Map<String, Json> value) implements Json.Object {
     }
 
     @Override
-    public Json put(String key, Json value) {
+    public Json put(java.lang.String key, Json value) {
         return this.value.put(key, value);
     }
 
@@ -50,7 +50,7 @@ record Object(Map<String, Json> value) implements Json.Object {
     }
 
     @Override
-    public void putAll(Map<? extends String, ? extends Json> m) {
+    public void putAll(Map<? extends java.lang.String, ? extends Json> m) {
         this.value.putAll(m);
     }
 
@@ -60,7 +60,7 @@ record Object(Map<String, Json> value) implements Json.Object {
     }
 
     @Override
-    public Set<String> keySet() {
+    public Set<java.lang.String> keySet() {
         return this.value.keySet();
     }
 
@@ -70,7 +70,7 @@ record Object(Map<String, Json> value) implements Json.Object {
     }
 
     @Override
-    public Set<Entry<String, Json>> entrySet() {
+    public Set<Entry<java.lang.String, Json>> entrySet() {
         return this.value.entrySet();
     }
 
@@ -80,17 +80,17 @@ record Object(Map<String, Json> value) implements Json.Object {
     }
 
     @Override
-    public void forEach(BiConsumer<? super String, ? super Json> action) {
+    public void forEach(BiConsumer<? super java.lang.String, ? super Json> action) {
         this.value.forEach(action);
     }
 
     @Override
-    public void replaceAll(BiFunction<? super String, ? super Json, ? extends Json> function) {
+    public void replaceAll(BiFunction<? super java.lang.String, ? super Json, ? extends Json> function) {
         this.value.replaceAll(function);
     }
 
     @Override
-    public Json putIfAbsent(String key, Json value) {
+    public Json putIfAbsent(java.lang.String key, Json value) {
         return this.value.putIfAbsent(key, value);
     }
 
@@ -100,32 +100,32 @@ record Object(Map<String, Json> value) implements Json.Object {
     }
 
     @Override
-    public boolean replace(String key, Json oldValue, Json newValue) {
+    public boolean replace(java.lang.String key, Json oldValue, Json newValue) {
         return this.value.replace(key, oldValue, newValue);
     }
 
     @Override
-    public Json replace(String key, Json value) {
+    public Json replace(java.lang.String key, Json value) {
         return this.value.replace(key, value);
     }
 
     @Override
-    public Json computeIfAbsent(String key, Function<? super String, ? extends Json> mappingFunction) {
+    public Json computeIfAbsent(java.lang.String key, Function<? super java.lang.String, ? extends Json> mappingFunction) {
         return this.value.computeIfAbsent(key, mappingFunction);
     }
 
     @Override
-    public Json computeIfPresent(String key, BiFunction<? super String, ? super Json, ? extends Json> remappingFunction) {
+    public Json computeIfPresent(java.lang.String key, BiFunction<? super java.lang.String, ? super Json, ? extends Json> remappingFunction) {
         return this.value.computeIfPresent(key, remappingFunction);
     }
 
     @Override
-    public Json compute(String key, BiFunction<? super String, ? super Json, ? extends Json> remappingFunction) {
+    public Json compute(java.lang.String key, BiFunction<? super java.lang.String, ? super Json, ? extends Json> remappingFunction) {
         return this.value.compute(key, remappingFunction);
     }
 
     @Override
-    public Json merge(String key, Json value, BiFunction<? super Json, ? super Json, ? extends Json> remappingFunction) {
+    public Json merge(java.lang.String key, Json value, BiFunction<? super Json, ? super Json, ? extends Json> remappingFunction) {
         return this.value.merge(key, value, remappingFunction);
     }
 }
