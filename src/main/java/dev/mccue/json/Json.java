@@ -1,16 +1,104 @@
 package dev.mccue.json;
 
-import java.io.IOException;
-import java.io.PushbackReader;
-import java.io.StringReader;
-import java.io.UncheckedIOException;
+import java.io.*;
 import java.math.BigDecimal;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.stream.Collectors;
 
 public sealed interface Json {
+    static Json of(BigDecimal value) {
+        return value == null ? Json.Null.instance() : new dev.mccue.json.BigDecimal(value);
+    }
+
+    static Json of(double value) {
+        return new dev.mccue.json.Double(value);
+    }
+
+    static Json of(long value) {
+        return new dev.mccue.json.Long(value);
+    }
+
+    static Json of(float value) {
+        return new dev.mccue.json.Double(value);
+    }
+
+    static Json of(int value) {
+        return new dev.mccue.json.Long(value);
+    }
+
+    static Json of(java.lang.Double value) {
+        return value == null ? Json.Null.instance() : new dev.mccue.json.Double(value);
+    }
+
+    static Json of(java.lang.Long value) {
+        return value == null ? Json.Null.instance() : new dev.mccue.json.Long(value);
+    }
+
+    static Json of(Float value) {
+        return value == null ? Json.Null.instance() : new dev.mccue.json.Double(value);
+    }
+
+    static Json of(Integer value) {
+        return value == null ? Json.Null.instance() : new dev.mccue.json.Long(value);
+    }
+
+    static Json of(java.math.BigInteger value) {
+        return value == null ? Json.Null.instance() : new dev.mccue.json.BigInteger(value);
+    }
+
+    static Json of(java.lang.String value) {
+        return value == null ? Json.Null.instance() : new dev.mccue.json.String(value);
+    }
+
+    static Json ofNull() {
+        return Json.Null.instance();
+    }
+
+    static Json ofTrue() {
+        return Json.Boolean.of(true);
+    }
+
+    static Json ofFalse() {
+        return Json.Boolean.of(false);
+    }
+
+
+    static Json of(boolean b) {
+        return Json.Boolean.of(b);
+    }
+
+    static Json of(java.lang.Boolean b) {
+        return b == null ? Json.Null.instance() : Json.Boolean.of(b);
+    }
+
+    static Json of(Collection<? extends Json> jsonList) {
+        return jsonList == null
+                ? Json.Null.instance()
+                : new dev.mccue.json.Array(
+                        jsonList.stream()
+                                .map(json -> json == null ? Json.Null.instance() : json)
+                                .toList()
+                );
+    }
+
+    static Json of(Map<java.lang.String, ? extends Json> jsonMap) {
+        return jsonMap == null
+                ? Json.Null.instance()
+                : new dev.mccue.json.Object(
+                        jsonMap
+                                .entrySet()
+                                .stream()
+                                .collect(Collectors.toUnmodifiableMap(
+                                        Map.Entry::getKey,
+                                        entry -> entry.getValue() == null
+                                                ? Json.Null.instance()
+                                                : entry.getValue()
+                                ))
+                );
+    }
+
+
+
     sealed interface String extends Json, CharSequence permits
             dev.mccue.json.String {
         java.lang.String value();
@@ -25,9 +113,9 @@ public sealed interface Json {
             dev.mccue.json.Double,
             dev.mccue.json.Long,
             dev.mccue.json.BigInteger {
-        abstract BigDecimal bigDecimalValue();
+        public abstract BigDecimal bigDecimalValue();
 
-        abstract java.math.BigInteger bigIntegerValue();
+        public abstract java.math.BigInteger bigIntegerValue();
 
         static Number of(BigDecimal value) {
             return new dev.mccue.json.BigDecimal(value);
@@ -78,6 +166,10 @@ public sealed interface Json {
         static Builder builder() {
             return new ArrayBuilder();
         }
+
+        static Builder builder(int initialCapacity) {
+            return new ArrayBuilder(initialCapacity);
+        }
         sealed interface Builder permits ArrayBuilder {
             Builder add(Json value);
             Builder addAll(Collection<? extends Json> value);
@@ -94,6 +186,10 @@ public sealed interface Json {
             return new ObjectBuilder();
         }
 
+        static Builder builder(int initialCapacity) {
+            return new ObjectBuilder(initialCapacity);
+        }
+
         sealed interface Builder permits ObjectBuilder {
             Builder put(java.lang.String key, Json value);
             Builder putAll(Map<java.lang.String, ? extends Json> values);
@@ -102,18 +198,12 @@ public sealed interface Json {
         }
     }
 
-    static Json parse(CharSequence jsonText) {
-        var parser = new JsonReader();
-
-        try {
-            return parser.read(new PushbackReader(new StringReader(jsonText.toString()), 64), false, new JsonReader.Options());
-        } catch (IOException e) {
-            throw new UncheckedIOException(e);
-        }
+    static Json readString(CharSequence jsonText) {
+        return readString(jsonText, new ReadOptions());
     }
 
 
-    static Json read(CharSequence jsonText, JsonReader.Options options) {
+    static Json readString(CharSequence jsonText, ReadOptions options) {
         var parser = new JsonReader();
 
         try {
@@ -123,8 +213,84 @@ public sealed interface Json {
         }
     }
 
-    static void write(Json json, Appendable out, JsonReader.Options options) {
+    static void write(Json json, Appendable out, WriteOptions options) throws IOException {
+        var writer = new JsonWriter();
+        writer.write(json, out, options);
+    }
 
+    static java.lang.String writeString(Json json) {
+        return writeString(json, new WriteOptions());
+    }
+
+    static java.lang.String writeString(Json json, WriteOptions options) {
+        var sw = new StringWriter();
+        try {
+            write(json, sw, options);
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        }
+        return sw.toString();
+    }
+
+    /**
+     * @param escapeUnicode If true, non-ascii characters are escaped as \\uXXXX
+     * @param escapeJavascriptSeparators If true (default) the Unicode characters U+2028 and U+2029 will
+     *                                   be escaped as \\u2028 and \\u2029 even if :escape-unicode is
+     *                                   false. (These two characters are valid in pure JSON but are not
+     *                                   valid in JavaScript strings.).
+     * @param escapeSlash If true (default) the slash / is escaped as \\/
+     */
+    record WriteOptions(
+            boolean escapeUnicode,
+            boolean escapeJavascriptSeparators,
+            boolean escapeSlash,
+            boolean indent
+    ) {
+        public WriteOptions() {
+            this(true, true, true, false);
+        }
+
+        public WriteOptions withEscapeUnicode(boolean escapeUnicode) {
+            return new WriteOptions(escapeUnicode, escapeJavascriptSeparators, escapeSlash, indent);
+        }
+
+        public WriteOptions withEscapeJavascriptSeparators(boolean escapeJavascriptSeparators) {
+            return new WriteOptions(escapeUnicode, escapeJavascriptSeparators, escapeSlash, indent);
+        }
+
+        public WriteOptions withEscapeSlash(boolean escapeSlash) {
+            return new WriteOptions(escapeUnicode, escapeJavascriptSeparators, escapeSlash, indent);
+        }
+
+        public WriteOptions withIndent(boolean indent) {
+            return new WriteOptions(escapeUnicode, escapeJavascriptSeparators, escapeSlash, indent);
+        }
+    }
+
+    public sealed interface EOFBehavior {
+        record ThrowException() implements EOFBehavior {}
+        record DefaultValue(Json json) implements EOFBehavior {}
+    }
+
+    record ReadOptions(
+            EOFBehavior eofBehavior,
+            boolean useBigDecimals
+    ) {
+        public ReadOptions {
+            Objects.requireNonNull(eofBehavior, "eofBehavior must not be null");
+        }
+
+        public ReadOptions() {
+            this(new EOFBehavior.ThrowException(), false);
+        }
+
+        public ReadOptions withEOFBehavior(EOFBehavior eofBehavior) {
+            return new ReadOptions(eofBehavior, useBigDecimals);
+        }
+
+        public ReadOptions withUseBigDecimals(boolean useBigDecimals) {
+            return new ReadOptions(eofBehavior, useBigDecimals);
+        }
     }
 }
 

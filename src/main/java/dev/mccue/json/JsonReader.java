@@ -8,7 +8,7 @@ import java.math.BigInteger;
 import java.util.List;
 import java.util.Optional;
 
-public final class JsonReader {
+final class JsonReader {
     /**
      * Expects to be called with the head of the stream AFTER the
      * initial "\\u".  Reads the next four characters from the stream.
@@ -342,7 +342,7 @@ public final class JsonReader {
         }
     }
 
-    private Json.Array readArrayHelper(PushbackReader stream, Options options) throws IOException {
+    private Json.Array readArrayHelper(PushbackReader stream, Json.ReadOptions options) throws IOException {
         var result = Json.Array.builder();
         while (true) {
             result.add(read(stream, true, options));
@@ -357,7 +357,7 @@ public final class JsonReader {
         }
 
     }
-    private Json.Array readArray(PushbackReader stream, Options options) throws IOException {
+    private Json.Array readArray(PushbackReader stream, Json.ReadOptions options) throws IOException {
         var c = nextToken(stream);
         switch (c) {
             case ']':
@@ -392,7 +392,7 @@ public final class JsonReader {
         }
     }
 
-    private Json.Object readObject(PushbackReader stream, Options options) throws IOException {
+    private Json.Object readObject(PushbackReader stream, Json.ReadOptions options) throws IOException {
         var result = Json.Object.builder();
 
         while (true) {
@@ -421,7 +421,7 @@ public final class JsonReader {
         }
     }
 
-    Json read(PushbackReader stream, boolean eofError, Options options) throws IOException {
+    Json read(PushbackReader stream, boolean eofError, Json.ReadOptions options) throws IOException {
         int c = nextToken(stream);
         switch (c) {
             case '-', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9' -> {
@@ -463,7 +463,7 @@ public final class JsonReader {
             }
             default -> {
                 if (c < 0) {
-                    if (eofError || !(options.eofBehavior() instanceof EOFBehavior.DefaultValue eofDefaultValue)) {
+                    if (eofError || !(options.eofBehavior() instanceof Json.EOFBehavior.DefaultValue eofDefaultValue)) {
                         throw new EOFException("JSON error (end-of-file)");
                     }
                     else {
@@ -474,20 +474,6 @@ public final class JsonReader {
                     throw new RuntimeException("JSON error (unexpected character): " + (char) c);
                 }
             }
-        }
-    }
-
-    public sealed interface EOFBehavior {
-        record ThrowException() implements EOFBehavior {}
-        record DefaultValue(Json json) implements EOFBehavior {}
-    }
-
-    public record Options(
-            EOFBehavior eofBehavior,
-            boolean useBigDecimals
-    ) {
-        Options() {
-            this(new EOFBehavior.ThrowException(), false);
         }
     }
 }

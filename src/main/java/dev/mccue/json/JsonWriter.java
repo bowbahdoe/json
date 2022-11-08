@@ -1,9 +1,29 @@
 package dev.mccue.json;
 
 import java.io.IOException;
-import java.io.Writer;
+import java.util.IdentityHashMap;
 
-public final class JsonWriter {
+final class JsonWriter {
+    private interface Writer {
+        void write(Json v, Appendable out, OptionsWithIndentDepth options) throws IOException;
+    }
+
+    private static final IdentityHashMap<Class<? extends Json>, Writer> WRITERS;
+
+    static {
+        WRITERS = new IdentityHashMap<>();
+        WRITERS.put(Null.class, (__, out, ___) -> out.append("null"));
+        WRITERS.put(True.class, (__, out, ___) -> out.append("true"));
+        WRITERS.put(False.class, (__, out, ___) -> out.append("false"));
+        WRITERS.put(Long.class, (v, out, ___) -> out.append(v.toString()));
+        WRITERS.put(Double.class, (v, out, ___) -> out.append(v.toString()));
+        WRITERS.put(BigInteger.class, (v, out, ___) -> out.append(v.toString()));
+        WRITERS.put(BigDecimal.class, (v, out, ___) -> out.append(v.toString()));
+        WRITERS.put(String.class, (v, out, options) -> writeString((Json.String) v, out, options));
+        WRITERS.put(Array.class, (v, out, options) -> writeArray((Json.Array) v, out, options));
+        WRITERS.put(Object.class, (v, out, options) -> writeObject((Json.Object) v, out, options));
+    }
+
     private static final short[] CODEPOINT_DECODER;
 
     static {
@@ -29,7 +49,7 @@ public final class JsonWriter {
         }
     }
 
-    private void emitHexString(Appendable out, char cp) throws IOException {
+    private static void emitHexString(Appendable out, char cp) throws IOException {
         out.append("\\u");
         if (cp < 16) {
             out.append("000");
@@ -44,7 +64,7 @@ public final class JsonWriter {
         out.append(Integer.toHexString(cp));
     }
 
-    private void writeString(CharSequence s, Appendable out, Options options) throws IOException {
+    private static void writeString(CharSequence s, Appendable out, OptionsWithIndentDepth options) throws IOException {
         out.append('"');
         for (int i = 0; i < s.length(); i++) {
             char cp = s.charAt(i);
@@ -104,35 +124,121 @@ public final class JsonWriter {
         out.append('"');
     }
 
-    private void writeIndent(Appendable out, int indentDepth) throws IOException {
+    private static void writeIndent(Appendable out, OptionsWithIndentDepth options) throws IOException {
         out.append('\n');
-        int i = indentDepth;
+        int i = options.indentDepth;
         while (i > 0) {
             out.append(' ');
             i--;
         }
     }
 
+    private static void writeObject(Json.Object m, Appendable out, OptionsWithIndentDepth options) throws IOException {
+        var indent = options.indent();
+        var opts = indent
+                ? options.incrementIndentDepth()
+                : options;
 
-    /**
-     * @param escapeUnicode If true, non-ascii characters are escaped as \\uXXXX
-     * @param escapeJavascriptSeparators If true (default) the Unicode characters U+2028 and U+2029 will
-     *                                   be escaped as \\u2028 and \\u2029 even if :escape-unicode is
-     *                                   false. (These two characters are valid in pure JSON but are not
-     *                                   valid in JavaScript strings.).
-     * @param escapeSlash If true (default) the slash / is escaped as \\/
-     */
-    public record Options(
-            boolean escapeUnicode,
-            boolean escapeJavascriptSeparators,
-            boolean escapeSlash
+        out.append('{');
+        if (indent && !m.isEmpty()) {
+            writeIndent(out, opts);
+        }
+
+        var x = m.entrySet().iterator();
+        var havePrintedKV = false;
+        while (x.hasNext()) {
+            var entry = x.next();
+            var k = entry.getKey();
+            var v = entry.getValue();
+            if (havePrintedKV) {
+                out.append(',');
+                if (indent) {
+                    writeIndent(out, opts);
+                }
+            }
+            writeString(k, out, opts);
+            out.append(':');
+            if (indent) {
+                out.append(' ');
+            }
+            write(v, out, opts);
+            if (x.hasNext()) {
+                havePrintedKV = true;
+            }
+        }
+        if (indent && !m.isEmpty()) {
+            writeIndent(out, options);
+        }
+        out.append('}');
+    }
+
+    private static void writeArray(Json.Array a, Appendable out, OptionsWithIndentDepth options) throws IOException {
+        var indent = options.indent();
+        var opts = indent
+                ? options.incrementIndentDepth()
+                : options;
+
+        out.append('[');
+        if (indent && !a.isEmpty()) {
+            writeIndent(out, opts);
+        }
+        var x = a.iterator();
+        while (x.hasNext()) {
+            var first = x.next();
+            write(first, out, opts);
+            if (x.hasNext()) {
+                out.append(',');
+                if (indent) {
+                    writeIndent(out, opts);
+                }
+            }
+        }
+
+        if (indent && !a.isEmpty()) {
+            writeIndent(out, options);
+        }
+
+        out.append(']');
+    }
+
+
+    private static void write(Json v, Appendable out, OptionsWithIndentDepth options) throws IOException {
+        WRITERS.get(v.getClass()).write(v, out, options);
+    }
+
+    private record OptionsWithIndentDepth(
+            Json.WriteOptions options,
+            int indentDepth
     ) {
-        public Options() {
-            this(true, true, true);
+        OptionsWithIndentDepth(Json.WriteOptions options) {
+            this(options, 0);
+        }
+
+        boolean escapeUnicode() {
+            return options.escapeUnicode();
+        }
+
+
+        boolean escapeJavascriptSeparators() {
+            return options.escapeJavascriptSeparators();
+        }
+
+        boolean escapeSlash() {
+            return options.escapeSlash();
+        }
+
+        boolean indent() {
+            return options.indent();
+        }
+
+        OptionsWithIndentDepth incrementIndentDepth() {
+            return new OptionsWithIndentDepth(options, indentDepth + 1);
         }
     }
 
-    public void write(Writer writer) {
 
+
+    public void write(Json json, Appendable out, Json.WriteOptions options) throws IOException {
+        write(json, out, new OptionsWithIndentDepth(options));
     }
 }

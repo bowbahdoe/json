@@ -1,5 +1,6 @@
 package dev.mccue.json;
 
+import java.io.StringWriter;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Objects;
@@ -7,11 +8,23 @@ import java.util.Set;
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 record Object(Map<java.lang.String, Json> value) implements Json.Object {
     Object(Map<java.lang.String, Json> value) {
-        Objects.requireNonNull(value, "Json.Table value must be nonnull");
-        this.value = Map.copyOf(value);
+        Objects.requireNonNull(value, "Json.Object value must be nonnull");
+        this.value = value
+                .entrySet()
+                .stream()
+                .collect(Collectors.toUnmodifiableMap(
+                        entry -> {
+                            Objects.requireNonNull(entry.getKey(), "Json.Object cannot have null keys");
+                            return entry.getKey();
+                        },
+                        entry -> entry.getValue() == null
+                                ? Json.Null.instance()
+                                : entry.getValue()
+                ));
     }
 
     @Override
@@ -127,5 +140,10 @@ record Object(Map<java.lang.String, Json> value) implements Json.Object {
     @Override
     public Json merge(java.lang.String key, Json value, BiFunction<? super Json, ? super Json, ? extends Json> remappingFunction) {
         return this.value.merge(key, value, remappingFunction);
+    }
+
+    @Override
+    public java.lang.String toString() {
+        return Json.writeString(this);
     }
 }

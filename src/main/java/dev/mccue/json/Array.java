@@ -1,5 +1,6 @@
 package dev.mccue.json;
 
+import java.io.StringWriter;
 import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.IntFunction;
@@ -10,6 +11,7 @@ import java.util.stream.Stream;
 record Array(List<Json> value) implements Json.Array {
     Array(List<Json> value) {
         Objects.requireNonNull(value, "Json.Array value must be nonnull");
+        value.forEach(json -> Objects.requireNonNull(json, "Each value in a Json.Array must be nonnull"));
         this.value = List.copyOf(value);
     }
 
@@ -171,5 +173,10 @@ record Array(List<Json> value) implements Json.Array {
     @Override
     public Stream<Json> parallelStream() {
         return this.value.parallelStream();
+    }
+
+    @Override
+    public java.lang.String toString() {
+        return Json.writeString(this);
     }
 }

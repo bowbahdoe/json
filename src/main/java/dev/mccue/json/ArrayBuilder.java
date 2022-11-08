@@ -9,6 +9,10 @@ record ArrayBuilder(ArrayList<Json> values) implements Json.Array.Builder {
         this(new ArrayList<>());
     }
 
+    ArrayBuilder(int initialCapacity) {
+        this(new ArrayList<>(initialCapacity));
+    }
+
     @Override
     public Json.Array.Builder add(Json value) {
         Objects.requireNonNull(value);

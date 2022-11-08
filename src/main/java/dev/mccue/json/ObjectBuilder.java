@@ -8,6 +8,10 @@ record ObjectBuilder(HashMap<java.lang.String, Json> values) implements Json.Obj
         this(new HashMap<>());
     }
 
+    ObjectBuilder(int initialCapacity) {
+        this(new HashMap<>(initialCapacity));
+    }
+
     @Override
     public Json.Object.Builder put(java.lang.String key, Json value) {
         this.values.put(key, value);
