@@ -202,7 +202,6 @@ public sealed interface Json {
         return readString(jsonText, new ReadOptions());
     }
 
-
     static Json readString(CharSequence jsonText, ReadOptions options) {
         var parser = new JsonReader();
 

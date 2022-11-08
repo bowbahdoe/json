@@ -14,7 +14,7 @@ public final class TestJsonParsing {
                 .getResourceAsStream("1000-null.json")) {
             assert is != null;
             var contents  = new String(is.readAllBytes(), StandardCharsets.UTF_8);
-            var json = Json.parse(contents);
+            var json = Json.readString(contents);
 
             Json.Null[] nulls = new Json.Null[1000];
             Arrays.fill(nulls, Json.Null.instance());
@@ -28,7 +28,7 @@ public final class TestJsonParsing {
                 .getResourceAsStream("json100k.json")) {
             assert is != null;
             var contents  = new String(is.readAllBytes(), StandardCharsets.UTF_8);
-            var json = Json.parse(contents);
+            var json = Json.readString(contents);
 
             System.out.println(json);
         }
