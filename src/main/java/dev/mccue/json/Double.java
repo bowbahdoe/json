@@ -1,5 +1,8 @@
 package dev.mccue.json;
 
+import java.math.BigDecimal;
+import java.math.BigInteger;
+
 final class Double extends Json.Number {
     private final double doubleValue;
 
@@ -22,6 +25,36 @@ final class Double extends Json.Number {
     @Override
     public java.math.BigInteger bigIntegerValue() {
         return java.math.BigInteger.valueOf((long) doubleValue);
+    }
+
+    @Override
+    public int intValueExact() {
+        if (((int) doubleValue) == doubleValue) {
+            return (int) doubleValue;
+        }
+        else {
+            throw new ArithmeticException(doubleValue + " cannot fit into an int");
+        }
+    }
+
+    @Override
+    public long longValueExact() {
+        if (((long) doubleValue) == doubleValue) {
+            return (int) doubleValue;
+        }
+        else {
+            throw new ArithmeticException(doubleValue + " cannot fit into an int");
+        }
+    }
+
+    @Override
+    public BigInteger bigIntegerValueExact() {
+        return BigDecimal.valueOf(doubleValue).toBigIntegerExact();
+    }
+
+    @Override
+    public boolean isIntegral() {
+        return (((int) doubleValue) == doubleValue);
     }
 
     @Override

@@ -20,6 +20,26 @@ final class BigInteger extends Json.Number {
     }
 
     @Override
+    public int intValueExact() {
+        return bigIntegerValue().intValueExact();
+    }
+
+    @Override
+    public long longValueExact() {
+        return bigIntegerValue.longValueExact();
+    }
+
+    @Override
+    public java.math.BigInteger bigIntegerValueExact() {
+        return bigIntegerValue;
+    }
+
+    @Override
+    public boolean isIntegral() {
+        return true;
+    }
+
+    @Override
     public int intValue() {
         return bigIntegerValue.intValue();
     }

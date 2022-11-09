@@ -97,7 +97,13 @@ public sealed interface Json {
                 );
     }
 
+    static Json.Object.Builder objectBuilder() {
+        return Json.Object.builder();
+    }
 
+    static Json.Array.Builder arrayBuilder() {
+        return Json.Array.builder();
+    }
 
     sealed interface String extends Json, CharSequence permits
             dev.mccue.json.String {
@@ -116,6 +122,14 @@ public sealed interface Json {
         public abstract BigDecimal bigDecimalValue();
 
         public abstract java.math.BigInteger bigIntegerValue();
+
+        public abstract int intValueExact();
+
+        public abstract long longValueExact();
+
+        public abstract java.math.BigInteger bigIntegerValueExact();
+
+        public abstract boolean isIntegral();
 
         static Number of(BigDecimal value) {
             return new dev.mccue.json.BigDecimal(value);
@@ -155,6 +169,7 @@ public sealed interface Json {
             return dev.mccue.json.Null.INSTANCE;
         }
     }
+
     sealed interface Array extends Json, List<Json> permits dev.mccue.json.Array {
         static Array of(Json... values) {
             return new dev.mccue.json.Array(Arrays.asList(values));
@@ -212,9 +227,9 @@ public sealed interface Json {
         }
     }
 
-    static void write(Json json, Appendable out, WriteOptions options) throws IOException {
-        var writer = new JsonWriter();
-        writer.write(json, out, options);
+    static Json read(Reader reader, ReadOptions options) throws IOException {
+        var parser = new JsonReader();
+        return parser.read(new PushbackReader(reader, 64), false, options);
     }
 
     static java.lang.String writeString(Json json) {
@@ -229,6 +244,14 @@ public sealed interface Json {
             throw new UncheckedIOException(e);
         }
         return sw.toString();
+    }
+
+    static void write(Json json, Writer writer, WriteOptions options) throws IOException {
+        new JsonWriter().write(json, writer, options);
+    }
+
+    static void write(Json json, Appendable out, WriteOptions options) throws IOException {
+        new JsonWriter().write(json, out, options);
     }
 
     /**
@@ -266,7 +289,7 @@ public sealed interface Json {
         }
     }
 
-    public sealed interface EOFBehavior {
+    sealed interface EOFBehavior {
         record ThrowException() implements EOFBehavior {}
         record DefaultValue(Json json) implements EOFBehavior {}
     }

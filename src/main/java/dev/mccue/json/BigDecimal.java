@@ -1,5 +1,6 @@
 package dev.mccue.json;
 
+import java.math.BigInteger;
 import java.util.Objects;
 
 final class BigDecimal extends Json.Number {
@@ -40,6 +41,26 @@ final class BigDecimal extends Json.Number {
     @Override
     public java.math.BigInteger bigIntegerValue() {
         return bigDecimalValue.toBigInteger();
+    }
+
+    @Override
+    public int intValueExact() {
+        return bigDecimalValue.intValueExact();
+    }
+
+    @Override
+    public long longValueExact() {
+        return bigDecimalValue.longValueExact();
+    }
+
+    @Override
+    public BigInteger bigIntegerValueExact() {
+        return bigDecimalValue.toBigIntegerExact();
+    }
+
+    @Override
+    public boolean isIntegral() {
+        return bigDecimalValue.scale() == 0;
     }
 
     @Override

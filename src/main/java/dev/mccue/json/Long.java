@@ -1,5 +1,7 @@
 package dev.mccue.json;
 
+import java.math.BigInteger;
+
 final class Long extends Json.Number {
     private final long longValue;
 
@@ -15,6 +17,31 @@ final class Long extends Json.Number {
     @Override
     public java.math.BigInteger bigIntegerValue() {
         return java.math.BigInteger.valueOf(longValue);
+    }
+
+    @Override
+    public int intValueExact() {
+        if (longValue <= Integer.MAX_VALUE && longValue >= Integer.MIN_VALUE) {
+            return (int) longValue;
+        }
+        else {
+            throw new ArithmeticException(longValue + " cannot fit into an int.");
+        }
+    }
+
+    @Override
+    public long longValueExact() {
+        return longValue;
+    }
+
+    @Override
+    public BigInteger bigIntegerValueExact() {
+        return BigInteger.valueOf(longValue);
+    }
+
+    @Override
+    public boolean isIntegral() {
+        return true;
     }
 
 
