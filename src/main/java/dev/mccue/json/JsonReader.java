@@ -1,6 +1,6 @@
 package dev.mccue.json;
 
-import java.io.EOFException;
+
 import java.io.IOException;
 import java.io.PushbackReader;
 import java.math.BigDecimal;
@@ -20,7 +20,7 @@ final class JsonReader {
         var d = stream.read();
 
         if (a < 0 || b < 0 || c < 0 || d < 0) {
-            throw new EOFException("JSON error (end-of-file inside Unicode character escape)");
+            throw new JsonReadException("JSON error (end-of-file inside Unicode character escape)");
         }
 
         var s = java.lang.String.valueOf(new char[] { (char) a, (char) b, (char) c, (char) d });;
@@ -33,7 +33,7 @@ final class JsonReader {
         // initial backslash.
         var c = stream.read();
         if (c < 0) {
-            throw new EOFException("JSON error (end-of-file inside escaped char)");
+            throw new JsonReadException("JSON error (end-of-file inside escaped char)");
         }
 
         return switch ((char) c) {
@@ -44,7 +44,7 @@ final class JsonReader {
             case 'r' -> '\r'; // return
             case 't' -> '\t'; // tab
             case 'u' -> readHexChar(stream);
-            default -> throw new RuntimeException("Invalid escaped char: " + (char) c);
+            default -> throw new JsonReadException("Invalid escaped char: " + (char) c);
         };
     }
 
@@ -53,7 +53,7 @@ final class JsonReader {
         while (true) {
             var c = stream.read();
             if (c < 0) {
-                throw new EOFException("JSON error (end-of-file inside string)");
+                throw new JsonReadException("JSON error (end-of-file inside string)");
             }
             switch ((char) c) {
                 case '"':
@@ -74,7 +74,7 @@ final class JsonReader {
         int read = stream.read(buffer, 0, 64);
         int endIndex = read - 1;
         if (read < 0) {
-            throw new EOFException("JSON error (end-of-file inside string)");
+            throw new JsonReadException("JSON error (end-of-file inside string)");
         }
 
         int i = 0;
@@ -168,7 +168,7 @@ final class JsonReader {
                             continue;
                         }
                         default ->
-                            throw new RuntimeException("JSON error (invalid number literal)");
+                            throw new JsonReadException("JSON error (invalid number literal)");
                     }
                 case INT_ZERO:
                     switch (c) {
@@ -183,7 +183,7 @@ final class JsonReader {
                             continue;
                         }
                         default ->
-                            throw new RuntimeException("JSON error (invalid number literal)");
+                            throw new JsonReadException("JSON error (invalid number literal)");
                     }
                 case INT_DIGIT:
                     // at this point, there is at least one digit
@@ -209,7 +209,7 @@ final class JsonReader {
                             break loop;
                         }
                         default -> {
-                            throw new RuntimeException("JSON error (invalid number literal)");
+                            throw new JsonReadException("JSON error (invalid number literal)");
                         }
                     }
                 case FRAC_POINT:
@@ -231,7 +231,7 @@ final class JsonReader {
                         }
                         default -> {
                             // Disallow zero-padded numbers or invalid characters
-                            throw new RuntimeException("JSON error (invalid number literal)");
+                            throw new JsonReadException("JSON error (invalid number literal)");
                         }
                     }
                 case FRAC_FIRST:
@@ -243,7 +243,7 @@ final class JsonReader {
                             continue;
                         }
                         default -> {
-                            throw new RuntimeException("JSON error (invalid number literal)");
+                            throw new JsonReadException("JSON error (invalid number literal)");
                         }
                     }
                 case FRAC_DIGIT:
@@ -266,7 +266,7 @@ final class JsonReader {
                         }
                         default -> {
                             // Disallow zero-padded numbers or invalid characters
-                            throw new RuntimeException("JSON error (invalid number literal)");
+                            throw new JsonReadException("JSON error (invalid number literal)");
                         }
                     }
                 case EXP_SYMBOL:
@@ -281,7 +281,7 @@ final class JsonReader {
                             stage = Stage.EXP_DIGIT;
                             continue;
                         }
-                        default -> throw new RuntimeException();
+                        default -> throw new JsonReadException();
                     }
                 case EXP_FIRST:
                     switch (c) {
@@ -290,7 +290,7 @@ final class JsonReader {
                             stage = Stage.EXP_DIGIT;
                             continue;
                         }
-                        default -> throw new RuntimeException("JSON error (invalid number literal)");
+                        default -> throw new JsonReadException("JSON error (invalid number literal)");
                     }
                 case EXP_DIGIT:
                     switch (c) {
@@ -306,7 +306,7 @@ final class JsonReader {
                         }
                         default -> {
                             // Disallow zero-padded numbers or invalid characters
-                            throw new RuntimeException("JSON error (invalid number literal)");
+                            throw new JsonReadException("JSON error (invalid number literal)");
                         }
                     }
             }
@@ -336,7 +336,7 @@ final class JsonReader {
                          return -1;
                      }
                      default:
-                         throw new RuntimeException();
+                         throw new JsonReadException();
                 }
             }
         }
@@ -352,7 +352,7 @@ final class JsonReader {
                 case ',':
                     continue;
                 default:
-                    throw new RuntimeException("JSON error (invalid array)");
+                    throw new JsonReadException("JSON error (invalid array)");
             }
         }
 
@@ -363,7 +363,7 @@ final class JsonReader {
             case ']':
                 return Json.Array.of(List.of());
             case ',':
-                throw new RuntimeException("JSON error (invalid array)");
+                throw new JsonReadException("JSON error (invalid array)");
             default: {
                 stream.unread(c);
                 return readArrayHelper(stream, options);
@@ -379,7 +379,7 @@ final class JsonReader {
                 return Optional.of(key);
             }
             else {
-                throw new RuntimeException("JSON error (missing `:` in object)");
+                throw new JsonReadException("JSON error (missing `:` in object)");
             }
         }
         else {
@@ -387,7 +387,7 @@ final class JsonReader {
                 return Optional.empty();
             }
             else {
-                throw new RuntimeException("JSON error (non-string key in object), found `" + (char) c + "`, expected `\"`");
+                throw new JsonReadException("JSON error (non-string key in object), found `" + (char) c + "`, expected `\"`");
             }
         }
     }
@@ -406,7 +406,7 @@ final class JsonReader {
                     case '}':
                         return result.build();
                     default:
-                        throw new RuntimeException("JSON error (missing entry in object)");
+                        throw new JsonReadException("JSON error (missing entry in object)");
                 }
             }
             else {
@@ -415,7 +415,7 @@ final class JsonReader {
                     return r;
                 }
                 else {
-                    throw new RuntimeException("JSON error empty entry in object is not allowed");
+                    throw new JsonReadException("JSON error empty entry in object is not allowed");
                 }
             }
         }
@@ -436,7 +436,7 @@ final class JsonReader {
                     return Json.Null.instance();
                 }
                 else {
-                    throw new RuntimeException("JSON error (expected null)");
+                    throw new JsonReadException("JSON error (expected null)");
                 }
             }
             case 't' -> {
@@ -444,7 +444,7 @@ final class JsonReader {
                     return Json.Boolean.of(true);
                 }
                 else {
-                    throw new RuntimeException("JSON error (expected true)");
+                    throw new JsonReadException("JSON error (expected true)");
                 }
             }
             case 'f' -> {
@@ -452,7 +452,7 @@ final class JsonReader {
                     return Json.Boolean.of(false);
                 }
                 else {
-                    throw new RuntimeException("JSON error (expected false)");
+                    throw new JsonReadException("JSON error (expected false)");
                 }
             }
             case '{' -> {
@@ -464,14 +464,14 @@ final class JsonReader {
             default -> {
                 if (c < 0) {
                     if (eofError || !(options.eofBehavior() instanceof Json.EOFBehavior.DefaultValue eofDefaultValue)) {
-                        throw new EOFException("JSON error (end-of-file)");
+                        throw new JsonReadException("JSON error (end-of-file)");
                     }
                     else {
                         return eofDefaultValue.json();
                     }
                 }
                 else {
-                    throw new RuntimeException("JSON error (unexpected character): " + (char) c);
+                    throw new JsonReadException("JSON error (unexpected character): " + (char) c);
                 }
             }
         }
