@@ -237,7 +237,7 @@ final class JsonReader {
                 case FRAC_FIRST:
                     // previous character is a "."
                     switch (c) {
-                        case '1', '2', '3', '4', '5', '6', '7', '8', '9' -> {
+                        case '0', '1', '2', '3', '4', '5', '6', '7', '8', '9' -> {
                             buffer.append((char) c);
                             stage = Stage.FRAC_DIGIT;
                             continue;

@@ -232,6 +232,10 @@ public sealed interface Json {
         return parser.read(new PushbackReader(reader, 64), false, options);
     }
 
+    static Json read(Reader reader) throws IOException {
+        return read(reader, new ReadOptions());
+    }
+
     static java.lang.String writeString(Json json) {
         return writeString(json, new WriteOptions());
     }
@@ -252,6 +256,14 @@ public sealed interface Json {
 
     static void write(Json json, Appendable out, WriteOptions options) throws IOException {
         new JsonWriter().write(json, out, options);
+    }
+
+    static void write(Json json, Writer writer) throws IOException {
+        new JsonWriter().write(json, writer, new WriteOptions());
+    }
+
+    static void write(Json json, Appendable out) throws IOException {
+        new JsonWriter().write(json, out, new WriteOptions());
     }
 
     /**
