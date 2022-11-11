@@ -6,7 +6,7 @@
 
     <groupId>dev.mccue</groupId>
     <artifactId>json</artifactId>
-    <version>0.0.4</version>
+    <version>0.0.5</version>
     <packaging>jar</packaging>
 
     <properties>
