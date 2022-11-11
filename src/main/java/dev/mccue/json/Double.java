@@ -1,5 +1,6 @@
 package dev.mccue.json;
 
+import java.io.Serial;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 
@@ -93,5 +94,15 @@ final class Double extends Json.Number {
     @Override
     public java.lang.String toString() {
         return java.lang.Double.toString(this.doubleValue);
+    }
+
+    @Serial
+    private java.lang.Object writeReplace() {
+        return new JsonSerializationProxy(Json.writeString(this));
+    }
+
+    @Serial
+    private java.lang.Object readResolve() {
+        throw new IllegalStateException();
     }
 }

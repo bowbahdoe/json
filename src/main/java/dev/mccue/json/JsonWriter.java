@@ -218,7 +218,6 @@ final class JsonWriter {
             return options.escapeUnicode();
         }
 
-
         boolean escapeJavascriptSeparators() {
             return options.escapeJavascriptSeparators();
         }

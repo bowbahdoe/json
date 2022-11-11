@@ -1,5 +1,6 @@
 package dev.mccue.json;
 
+import java.io.Serial;
 import java.util.Objects;
 import java.util.stream.IntStream;
 
@@ -35,5 +36,20 @@ record String(@Override java.lang.String value) implements Json.String {
     @Override
     public IntStream codePoints() {
         return this.value.codePoints();
+    }
+
+    @Override
+    public java.lang.String toString() {
+        return value;
+    }
+
+    @Serial
+    private java.lang.Object writeReplace() {
+        return new JsonSerializationProxy(Json.writeString(this));
+    }
+
+    @Serial
+    private java.lang.Object readResolve() {
+        throw new IllegalStateException();
     }
 }

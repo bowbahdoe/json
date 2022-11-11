@@ -1,5 +1,6 @@
 package dev.mccue.json;
 
+import java.io.Serial;
 import java.io.StringWriter;
 import java.util.*;
 import java.util.function.Consumer;
@@ -178,5 +179,15 @@ record Array(List<Json> value) implements Json.Array {
     @Override
     public java.lang.String toString() {
         return Json.writeString(this);
+    }
+
+    @Serial
+    private java.lang.Object writeReplace() {
+        return new JsonSerializationProxy(Json.writeString(this));
+    }
+
+    @Serial
+    private java.lang.Object readResolve() {
+        throw new IllegalStateException();
     }
 }

@@ -1,5 +1,6 @@
 package dev.mccue.json;
 
+import java.io.Serial;
 import java.math.BigInteger;
 import java.util.Objects;
 
@@ -79,6 +80,16 @@ final class BigDecimal extends Json.Number {
     @Override
     public java.lang.String toString() {
         return this.bigDecimalValue.toString();
+    }
+
+    @Serial
+    private java.lang.Object writeReplace() {
+        return new JsonSerializationProxy(Json.writeString(this));
+    }
+
+    @Serial
+    private java.lang.Object readResolve() {
+        throw new IllegalStateException();
     }
 }
 

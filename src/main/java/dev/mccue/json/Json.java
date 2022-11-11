@@ -5,7 +5,7 @@ import java.math.BigDecimal;
 import java.util.*;
 import java.util.stream.Collectors;
 
-public sealed interface Json {
+public sealed interface Json extends Serializable {
     static Json of(BigDecimal value) {
         return value == null ? Json.Null.instance() : new dev.mccue.json.BigDecimal(value);
     }
