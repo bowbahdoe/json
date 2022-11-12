@@ -463,11 +463,11 @@ final class JsonReader {
             }
             default -> {
                 if (c < 0) {
-                    if (eofError || !(options.eofBehavior() instanceof Json.EOFBehavior.DefaultValue eofDefaultValue)) {
+                    if (eofError || !(options.eofBehavior() == Json.EOFBehavior.RETURN_NULL)) {
                         throw new JsonReadException("JSON error (end-of-file)");
                     }
                     else {
-                        return eofDefaultValue.json();
+                        return null;
                     }
                 }
                 else {

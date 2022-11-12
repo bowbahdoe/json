@@ -126,11 +126,7 @@ final class JsonWriter {
 
     private static void writeIndent(Appendable out, OptionsWithIndentDepth options) throws IOException {
         out.append('\n');
-        int i = options.indentDepth;
-        while (i > 0) {
-            out.append(' ');
-            i--;
-        }
+        out.append(" ".repeat(options.indentation() * options.indentDepth));
     }
 
     private static void writeObject(Json.Object m, Appendable out, OptionsWithIndentDepth options) throws IOException {
@@ -226,8 +222,12 @@ final class JsonWriter {
             return options.escapeSlash();
         }
 
+        int indentation() {
+            return options.indentation();
+        }
+
         boolean indent() {
-            return options.indent();
+            return indentation() != 0;
         }
 
         OptionsWithIndentDepth incrementIndentDepth() {

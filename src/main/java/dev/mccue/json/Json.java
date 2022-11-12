@@ -278,32 +278,37 @@ public sealed interface Json extends Serializable {
             boolean escapeUnicode,
             boolean escapeJavascriptSeparators,
             boolean escapeSlash,
-            boolean indent
+            int indentation
     ) {
+        public WriteOptions {
+            if (indentation < 0) {
+                throw new IllegalArgumentException("indent must not be less than zero.");
+            }
+        }
         public WriteOptions() {
-            this(true, true, true, false);
+            this(true, true, true, 0);
         }
 
         public WriteOptions withEscapeUnicode(boolean escapeUnicode) {
-            return new WriteOptions(escapeUnicode, escapeJavascriptSeparators, escapeSlash, indent);
+            return new WriteOptions(escapeUnicode, escapeJavascriptSeparators, escapeSlash, indentation);
         }
 
         public WriteOptions withEscapeJavascriptSeparators(boolean escapeJavascriptSeparators) {
-            return new WriteOptions(escapeUnicode, escapeJavascriptSeparators, escapeSlash, indent);
+            return new WriteOptions(escapeUnicode, escapeJavascriptSeparators, escapeSlash, indentation);
         }
 
         public WriteOptions withEscapeSlash(boolean escapeSlash) {
-            return new WriteOptions(escapeUnicode, escapeJavascriptSeparators, escapeSlash, indent);
+            return new WriteOptions(escapeUnicode, escapeJavascriptSeparators, escapeSlash, indentation);
         }
 
-        public WriteOptions withIndent(boolean indent) {
-            return new WriteOptions(escapeUnicode, escapeJavascriptSeparators, escapeSlash, indent);
+        public WriteOptions withIndentation(int indentation) {
+            return new WriteOptions(escapeUnicode, escapeJavascriptSeparators, escapeSlash, indentation);
         }
     }
 
-    sealed interface EOFBehavior {
-        record ThrowException() implements EOFBehavior {}
-        record DefaultValue(Json json) implements EOFBehavior {}
+    enum EOFBehavior {
+        THROW_EXCEPTION,
+        RETURN_NULL
     }
 
     record ReadOptions(
@@ -315,7 +320,7 @@ public sealed interface Json extends Serializable {
         }
 
         public ReadOptions() {
-            this(new EOFBehavior.ThrowException(), false);
+            this(EOFBehavior.THROW_EXCEPTION, false);
         }
 
         public ReadOptions withEOFBehavior(EOFBehavior eofBehavior) {
@@ -327,11 +332,3 @@ public sealed interface Json extends Serializable {
         }
     }
 }
-
-
-
-
-
-
-
-
