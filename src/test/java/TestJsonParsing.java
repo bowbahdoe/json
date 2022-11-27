@@ -17,7 +17,7 @@ public final class TestJsonParsing {
             var json = Json.readString(contents);
 
             Json.Null[] nulls = new Json.Null[1000];
-            Arrays.fill(nulls, Json.Null.instance());
+            Arrays.fill(nulls, Json.ofNull());
             assertEquals(Json.Array.of(nulls), json);
         }
     }

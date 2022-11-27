@@ -433,7 +433,7 @@ final class JsonReader {
             }
             case 'n' -> {
                 if (stream.read() == 'u' && stream.read() == 'l' && stream.read() == 'l') {
-                    return Json.Null.instance();
+                    return Json.ofNull();
                 }
                 else {
                     throw new JsonReadException("JSON error (expected null)");
@@ -441,7 +441,7 @@ final class JsonReader {
             }
             case 't' -> {
                 if (stream.read() == 'r' && stream.read() == 'u' && stream.read() == 'e') {
-                    return Json.Boolean.of(true);
+                    return Json.of(true);
                 }
                 else {
                     throw new JsonReadException("JSON error (expected true)");
@@ -449,7 +449,7 @@ final class JsonReader {
             }
             case 'f' -> {
                 if (stream.read() == 'a' && stream.read() == 'l' && stream.read() == 's' && stream.read() == 'e') {
-                    return Json.Boolean.of(false);
+                    return Json.of(false);
                 }
                 else {
                     throw new JsonReadException("JSON error (expected false)");

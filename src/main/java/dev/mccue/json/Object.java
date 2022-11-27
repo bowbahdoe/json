@@ -24,7 +24,7 @@ record Object(Map<java.lang.String, Json> value) implements Json.Object {
                             return entry.getKey();
                         },
                         entry -> entry.getValue() == null
-                                ? Json.Null.instance()
+                                ? Json.ofNull()
                                 : entry.getValue()
                 ));
     }

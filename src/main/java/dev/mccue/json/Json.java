@@ -5,7 +5,14 @@ import java.math.BigDecimal;
 import java.util.*;
 import java.util.stream.Collectors;
 
-public sealed interface Json extends Serializable {
+/**
+ * Immutable tree representation of Json.
+ */
+public sealed interface Json extends Serializable, ToJson {
+    static Json of(ToJson value) {
+        return value == null ? Json.Null.instance() : value.toJson();
+    }
+
     static Json of(BigDecimal value) {
         return value == null ? Json.Null.instance() : new dev.mccue.json.BigDecimal(value);
     }
@@ -71,17 +78,17 @@ public sealed interface Json extends Serializable {
         return b == null ? Json.Null.instance() : Json.Boolean.of(b);
     }
 
-    static Json of(Collection<? extends Json> jsonList) {
+    static Json of(Collection<? extends ToJson> jsonList) {
         return jsonList == null
                 ? Json.Null.instance()
                 : new dev.mccue.json.Array(
                         jsonList.stream()
-                                .map(json -> json == null ? Json.Null.instance() : json)
+                                .map(json -> json == null ? Json.Null.instance() : json.toJson())
                                 .toList()
                 );
     }
 
-    static Json of(Map<java.lang.String, ? extends Json> jsonMap) {
+    static Json of(Map<java.lang.String, ? extends ToJson> jsonMap) {
         return jsonMap == null
                 ? Json.Null.instance()
                 : new dev.mccue.json.Object(
@@ -92,7 +99,7 @@ public sealed interface Json extends Serializable {
                                         Map.Entry::getKey,
                                         entry -> entry.getValue() == null
                                                 ? Json.Null.instance()
-                                                : entry.getValue()
+                                                : entry.getValue().toJson()
                                 ))
                 );
     }
@@ -101,8 +108,38 @@ public sealed interface Json extends Serializable {
         return Json.Object.builder();
     }
 
+    static Json.Object.Builder objectBuilder(Map<java.lang.String, ? extends ToJson> object) {
+        if (object instanceof dev.mccue.json.Object o) {
+            return new ObjectBuilder(new HashMap<>(o));
+        }
+        else {
+            return new ObjectBuilder(new HashMap<>(object.entrySet()
+                    .stream()
+                    .collect(Collectors.toMap(
+                            Map.Entry::getKey,
+                            entry -> Json.of(entry.getValue())
+                    ))));
+        }
+    }
+
     static Json.Array.Builder arrayBuilder() {
         return Json.Array.builder();
+    }
+
+    static Json.Array.Builder arrayBuilder(Collection<? extends ToJson> object) {
+        if (object instanceof dev.mccue.json.Array o) {
+            return new ArrayBuilder(new ArrayList<>(o));
+        }
+        else {
+            return new ArrayBuilder(new ArrayList<>(object.stream()
+                    .map(Json::of)
+                    .toList()));
+        }
+    }
+
+    @Override
+    default Json toJson() {
+        return this;
     }
 
     sealed interface String extends Json, CharSequence permits
@@ -187,7 +224,74 @@ public sealed interface Json extends Serializable {
         }
         sealed interface Builder permits ArrayBuilder {
             Builder add(Json value);
-            Builder addAll(Collection<? extends Json> value);
+            Builder addAll(Collection<? extends ToJson> value);
+            default Builder add(ToJson value) {
+                return add(Json.of(value));
+            }
+
+            default Builder add(BigDecimal value) {
+                return add(Json.of(value));
+            }
+
+            default Builder add(double value) {
+                return add(Json.of(value));
+            }
+
+            default Builder add(long value) {
+                return add(Json.of(value));
+            }
+
+            default Builder add(float value) {
+                return add(Json.of(value));
+            }
+
+            default Builder add(int value) {
+                return add(Json.of(value));
+            }
+
+            default Builder add(java.lang.Double value) {
+                return add(Json.of(value));
+            }
+
+            default Builder add(java.lang.Long value) {
+                return add(Json.of(value));
+            }
+
+            default Builder add(Float value) {
+                return add(Json.of(value));
+            }
+
+            default Builder add(Integer value) {
+                return add(Json.of(value));
+            }
+
+            default Builder add(java.math.BigInteger value) {
+                return add(Json.of(value));
+            }
+
+            default Builder add(java.lang.String value) {
+                return add(Json.of(value));
+            }
+
+            default Builder addNull() {
+                return add(Json.ofNull());
+            }
+
+            default Builder addTrue() {
+                return add(Json.ofTrue());
+            }
+
+            default Builder addFalse() {
+                return add(Json.ofFalse());
+            }
+
+            default Builder add(boolean b) {
+                return add(Json.of(b));
+            }
+
+            default Builder add(java.lang.Boolean b) {
+                return add(Json.of(b));
+            }
             Array build();
         }
     }
@@ -206,18 +310,87 @@ public sealed interface Json extends Serializable {
         }
 
         sealed interface Builder permits ObjectBuilder {
-            Builder put(java.lang.String key, Json value);
-            Builder putAll(Map<java.lang.String, ? extends Json> values);
+            Builder put(java.lang.String key, ToJson value);
+
+            default Builder put(java.lang.String key, BigDecimal value) {
+                return put(key, Json.of(value));
+            }
+
+            default Builder put(java.lang.String key, double value) {
+                return put(key, Json.of(value));
+            }
+
+            default Builder put(java.lang.String key, long value) {
+                return put(key, Json.of(value));
+            }
+
+            default Builder put(java.lang.String key, float value) {
+                return put(key, Json.of(value));
+            }
+
+            default Builder put(java.lang.String key, int value) {
+                return put(key, Json.of(value));
+            }
+
+            default Builder put(java.lang.String key, java.lang.Double value) {
+                return put(key, Json.of(value));
+            }
+
+            default Builder put(java.lang.String key, java.lang.Long value) {
+                return put(key, Json.of(value));
+            }
+
+            default Builder put(java.lang.String key, Float value) {
+                return put(key, Json.of(value));
+            }
+
+            default Builder put(java.lang.String key, Integer value) {
+                return put(key, Json.of(value));
+            }
+
+            default Builder put(java.lang.String key, java.math.BigInteger value) {
+                return put(key, Json.of(value));
+            }
+
+            default Builder putNull(java.lang.String key) {
+                return put(key, Json.ofNull());
+            }
+
+            default Builder putTrue(java.lang.String key) {
+                return put(key, Json.ofTrue());
+            }
+
+            default Builder putFalse(java.lang.String key) {
+                return put(key, Json.ofFalse());
+            }
+
+            default Builder put(java.lang.String key, boolean value) {
+                return put(key, Json.of(value));
+            }
+
+            default Builder put(java.lang.String key, java.lang.Boolean value) {
+                return put(key, Json.of(value));
+            }
+
+            default Builder put(java.lang.String key, Collection<? extends ToJson> value) {
+                return put(key, Json.of(value));
+            }
+
+            default Builder put(java.lang.String key, Map<java.lang.String, ? extends ToJson> value) {
+                return put(key, Json.of(value));
+            }
+
+            Builder putAll(Map<java.lang.String, ? extends ToJson> values);
 
             Object build();
         }
     }
 
-    static Json readString(CharSequence jsonText) {
+    static Json readString(CharSequence jsonText) throws JsonReadException {
         return readString(jsonText, new ReadOptions());
     }
 
-    static Json readString(CharSequence jsonText, ReadOptions options) {
+    static Json readString(CharSequence jsonText, ReadOptions options) throws JsonReadException {
         var parser = new JsonReader();
 
         try {
@@ -227,12 +400,12 @@ public sealed interface Json extends Serializable {
         }
     }
 
-    static Json read(Reader reader, ReadOptions options) throws IOException {
+    static Json read(Reader reader, ReadOptions options) throws IOException, JsonReadException {
         var parser = new JsonReader();
         return parser.read(new PushbackReader(reader, 64), false, options);
     }
 
-    static Json read(Reader reader) throws IOException {
+    static Json read(Reader reader) throws IOException, JsonReadException {
         return read(reader, new ReadOptions());
     }
 
@@ -306,11 +479,24 @@ public sealed interface Json extends Serializable {
         }
     }
 
+    /**
+     * Behavior to exhibit when an EOF is reached and no Json is read.
+     */
     enum EOFBehavior {
+        /**
+         * Throw an exception.
+         */
         THROW_EXCEPTION,
+        /**
+         * Return a "true null", not a Json null.
+         */
         RETURN_NULL
     }
 
+    /**
+     * @param eofBehavior What to do if an attempted read reaches an EOF without any Json being read.
+     * @param useBigDecimals Whether to use BigDecimals when reading decimal numbers
+     */
     record ReadOptions(
             EOFBehavior eofBehavior,
             boolean useBigDecimals
