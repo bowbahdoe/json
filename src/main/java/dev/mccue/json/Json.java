@@ -312,6 +312,10 @@ public sealed interface Json extends Serializable, ToJson {
         sealed interface Builder permits ObjectBuilder {
             Builder put(java.lang.String key, ToJson value);
 
+            default Builder put(java.lang.String key, java.lang.String value) {
+                return put(key, Json.of(value));
+            }
+
             default Builder put(java.lang.String key, BigDecimal value) {
                 return put(key, Json.of(value));
             }
