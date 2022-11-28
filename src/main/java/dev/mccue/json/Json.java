@@ -292,6 +292,7 @@ public sealed interface Json extends Serializable, ToJson {
             default Builder add(java.lang.Boolean b) {
                 return add(Json.of(b));
             }
+
             Array build();
         }
     }
@@ -382,6 +383,18 @@ public sealed interface Json extends Serializable, ToJson {
 
             default Builder put(java.lang.String key, Map<java.lang.String, ? extends ToJson> value) {
                 return put(key, Json.of(value));
+            }
+
+            default Builder put(java.lang.String key, Json value) {
+                return put(key, (ToJson) value);
+            }
+
+            default Builder put(java.lang.String key, Json.Object value) {
+                return put(key, (ToJson) value);
+            }
+
+            default Builder put(java.lang.String key, Json.Array value) {
+                return put(key, (ToJson) value);
             }
 
             Builder putAll(Map<java.lang.String, ? extends ToJson> values);
