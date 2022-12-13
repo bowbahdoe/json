@@ -1,19 +1,24 @@
 package dev.mccue.json;
 
 
+import dev.mccue.json.stream.JsonArrayHandler;
+import dev.mccue.json.stream.JsonValueHandler;
+
 import java.io.IOException;
 import java.io.PushbackReader;
 import java.math.BigDecimal;
 import java.math.BigInteger;
-import java.util.List;
-import java.util.Optional;
 
 final class JsonReader {
+    private JsonReader() {}
+
+    static final int MINIMUM_PUSHBACK_BUFFER_SIZE = 64;
+
     /**
      * Expects to be called with the head of the stream AFTER the
      * initial "\\u".  Reads the next four characters from the stream.
      */
-    private char readHexChar(PushbackReader stream) throws IOException {
+    private static char readHexChar(PushbackReader stream) throws IOException {
         var a = stream.read();
         var b = stream.read();
         var c = stream.read();
@@ -28,7 +33,7 @@ final class JsonReader {
         return (char) Integer.parseInt(s, 16);
     }
 
-    private char readEscapedChar(PushbackReader stream) throws IOException {
+    private static char readEscapedChar(PushbackReader stream) throws IOException {
         // Expects to be called with the head of the stream AFTER the
         // initial backslash.
         var c = stream.read();
@@ -48,7 +53,7 @@ final class JsonReader {
         };
     }
 
-    private java.lang.String slowReadString(PushbackReader stream, java.lang.String alreadyRead) throws IOException {
+    private static java.lang.String slowReadString(PushbackReader stream, java.lang.String alreadyRead) throws IOException {
         var buffer = new StringBuilder(alreadyRead);
         while (true) {
             var c = stream.read();
@@ -67,11 +72,11 @@ final class JsonReader {
         }
     }
 
-    private Json.String readQuotedString(PushbackReader stream) throws IOException {
+    private static java.lang.String readQuotedString(PushbackReader stream) throws IOException {
         // Expects to be called with the head of the stream AFTER the
         // opening quotation mark.
-        var buffer = new char[64];
-        int read = stream.read(buffer, 0, 64);
+        var buffer = new char[MINIMUM_PUSHBACK_BUFFER_SIZE];
+        int read = stream.read(buffer, 0, MINIMUM_PUSHBACK_BUFFER_SIZE);
         int endIndex = read - 1;
         if (read < 0) {
             throw new JsonReadException("JSON error (end-of-file inside string)");
@@ -85,18 +90,18 @@ final class JsonReader {
                     var off = i + 1;
                     var len = read - off;
                     stream.unread(buffer, off, len);
-                    return new dev.mccue.json.String(new java.lang.String(buffer, 0, i));
+                    return new java.lang.String(buffer, 0, i);
                 }
                 case '\\': {
                     var off = i;
                     var len = read - off;
                     stream.unread(buffer, off, len);
-                    return new dev.mccue.json.String(slowReadString(stream, new java.lang.String(buffer, 0, i)));
+                    return slowReadString(stream, new java.lang.String(buffer, 0, i));
                 }
                 default:
                     if (i == endIndex) {
                         stream.unread(c);
-                        return new dev.mccue.json.String(slowReadString(stream, new java.lang.String(buffer, 0, i)));
+                        return slowReadString(stream, new java.lang.String(buffer, 0, i));
                     }
                     else {
                         i++;
@@ -105,7 +110,7 @@ final class JsonReader {
         }
     }
 
-    private Json.Number readInteger(java.lang.String string) {
+    private static Json.Number readInteger(java.lang.String string) {
         if (string.length() < 18) { // definitely fits in a Long
             return Json.Number.of(java.lang.Long.parseLong(string));
         }
@@ -118,7 +123,7 @@ final class JsonReader {
         }
     }
 
-    private Json.Number readDecimal(java.lang.String string, boolean bigDecimal) {
+    private static Json.Number readDecimal(java.lang.String string, boolean bigDecimal) {
         if (bigDecimal) {
             return new dev.mccue.json.BigDecimal(new BigDecimal(string));
         }
@@ -127,7 +132,7 @@ final class JsonReader {
         }
     }
 
-    private Json.Number readNumber(PushbackReader stream, boolean bigDecimal) throws IOException {
+    private static Json.Number readNumber(PushbackReader stream, boolean bigDecimal) throws IOException {
         var buffer = new StringBuilder();
 
         enum Stage {
@@ -320,7 +325,7 @@ final class JsonReader {
         }
     }
 
-    private int nextToken(PushbackReader stream) throws IOException {
+    private static int nextToken(PushbackReader stream) throws IOException {
         var c = stream.read();
         while (true) {
             if (32 < c) {
@@ -342,41 +347,50 @@ final class JsonReader {
         }
     }
 
-    private Json.Array readArrayHelper(PushbackReader stream, Json.ReadOptions options) throws IOException {
-        var result = Json.Array.builder();
+    private static void readArrayHelper(
+            PushbackReader stream,
+            Json.StreamReadOptions options,
+            JsonArrayHandler arrayHandler
+    ) throws IOException {
         while (true) {
-            result.add(read(stream, true, options));
+            readStream(stream, true, options, arrayHandler);
             switch ((char) nextToken(stream)) {
                 case ']':
-                    return result.build();
+                    arrayHandler.onArrayEnd();
+                    return;
                 case ',':
                     continue;
                 default:
                     throw new JsonReadException("JSON error (invalid array)");
             }
         }
-
     }
-    private Json.Array readArray(PushbackReader stream, Json.ReadOptions options) throws IOException {
+
+    private static void readArray(
+            PushbackReader stream,
+            Json.StreamReadOptions options,
+            JsonValueHandler valueHandler
+    ) throws IOException {
+        var arrayHandler = valueHandler.onArrayStart();
         var c = nextToken(stream);
         switch (c) {
             case ']':
-                return Json.Array.of(List.of());
+                arrayHandler.onArrayEnd();
             case ',':
                 throw new JsonReadException("JSON error (invalid array)");
             default: {
                 stream.unread(c);
-                return readArrayHelper(stream, options);
+                readArrayHelper(stream, options, arrayHandler);
             }
         }
     }
 
-    private Optional<Json.String> readKey(PushbackReader stream) throws IOException {
+    private static /* @Nullable */ java.lang.String readKey(PushbackReader stream) throws IOException {
         var c = nextToken(stream);
         if (c == '\"') {
             var key = readQuotedString(stream);
             if ((int) ':' == nextToken(stream)) {
-                return Optional.of(key);
+                return key;
             }
             else {
                 throw new JsonReadException("JSON error (missing `:` in object)");
@@ -384,7 +398,7 @@ final class JsonReader {
         }
         else {
             if (c == '}') {
-                return Optional.empty();
+                return null;
             }
             else {
                 throw new JsonReadException("JSON error (non-string key in object), found `" + (char) c + "`, expected `\"`");
@@ -392,48 +406,58 @@ final class JsonReader {
         }
     }
 
-    private Json.Object readObject(PushbackReader stream, Json.ReadOptions options) throws IOException {
-        var result = Json.Object.builder();
-
+    private static void readObject(
+            PushbackReader stream,
+            Json.StreamReadOptions options,
+            JsonValueHandler valueHandler
+    ) throws IOException {
+        boolean readSomeEntry = false;
+        var objectHandler = valueHandler.onObjectStart();
         while (true) {
-            var key = readKey(stream).orElse(null);
+            var key = readKey(stream);
             if (key != null) {
-                var value = read(stream, true, options);
-                result.put(key.value(), value);
+                readSomeEntry = true;
+                var fieldHandler = objectHandler.onField(key);
+                readStream(stream, true, options, fieldHandler);
                 switch (nextToken(stream)) {
                     case ',':
                         continue;
                     case '}':
-                        return result.build();
+                        objectHandler.objectEnd();
+                        return;
                     default:
                         throw new JsonReadException("JSON error (missing entry in object)");
                 }
             }
             else {
-                var r = result.build();
-                if (r.isEmpty()) {
-                    return r;
+                if (readSomeEntry) {
+                    throw new JsonReadException("JSON error empty entry in object is not allowed");
                 }
                 else {
-                    throw new JsonReadException("JSON error empty entry in object is not allowed");
+                    return;
                 }
             }
         }
     }
 
-    Json read(PushbackReader stream, boolean eofError, Json.ReadOptions options) throws IOException {
+    static void readStream(
+            PushbackReader stream,
+            boolean eofError,
+            Json.StreamReadOptions options,
+            JsonValueHandler valueHandler
+    ) throws IOException {
         int c = nextToken(stream);
         switch (c) {
             case '-', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9' -> {
                 stream.unread(c);
-                return readNumber(stream, options.useBigDecimals()); // (:bigdec options)
+                valueHandler.onNumber(readNumber(stream, options.useBigDecimals())); // (:bigdec options)
             }
             case '"' -> {
-                return readQuotedString(stream);
+                valueHandler.onString(readQuotedString(stream));
             }
             case 'n' -> {
                 if (stream.read() == 'u' && stream.read() == 'l' && stream.read() == 'l') {
-                    return Json.ofNull();
+                    valueHandler.onNull();
                 }
                 else {
                     throw new JsonReadException("JSON error (expected null)");
@@ -441,7 +465,7 @@ final class JsonReader {
             }
             case 't' -> {
                 if (stream.read() == 'r' && stream.read() == 'u' && stream.read() == 'e') {
-                    return Json.of(true);
+                    valueHandler.onTrue();
                 }
                 else {
                     throw new JsonReadException("JSON error (expected true)");
@@ -449,31 +473,39 @@ final class JsonReader {
             }
             case 'f' -> {
                 if (stream.read() == 'a' && stream.read() == 'l' && stream.read() == 's' && stream.read() == 'e') {
-                    return Json.of(false);
+                    valueHandler.onFalse();
                 }
                 else {
                     throw new JsonReadException("JSON error (expected false)");
                 }
             }
             case '{' -> {
-                return readObject(stream, options);
+                readObject(stream, options, valueHandler);
             }
             case '[' -> {
-                return readArray(stream, options);
+                readArray(stream, options, valueHandler);
             }
             default -> {
                 if (c < 0) {
-                    if (eofError || !(options.eofBehavior() == Json.EOFBehavior.RETURN_NULL)) {
+                    if (eofError) {
                         throw new JsonReadException("JSON error (end-of-file)");
-                    }
-                    else {
-                        return null;
                     }
                 }
                 else {
                     throw new JsonReadException("JSON error (unexpected character): " + (char) c);
                 }
             }
+        }
+    }
+
+    static Json read(PushbackReader stream, Json.ReadOptions options) throws IOException {
+        var handler = new Handlers.BaseTreeValueHandler(options.eofBehavior());
+        readStream(stream, false, new Json.StreamReadOptions(options.useBigDecimals()), handler);
+        if (handler.result == null && options.eofBehavior() == Json.EOFBehavior.THROW_EXCEPTION) {
+            throw new JsonReadException("JSON error (end-of-file)");
+        }
+        else {
+            return handler.result;
         }
     }
 }

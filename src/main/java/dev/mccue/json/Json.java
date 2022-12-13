@@ -1,5 +1,8 @@
 package dev.mccue.json;
 
+import dev.mccue.json.internal.ValueBased;
+import dev.mccue.json.stream.JsonValueHandler;
+
 import java.io.*;
 import java.math.BigDecimal;
 import java.util.*;
@@ -416,22 +419,28 @@ public sealed interface Json extends Serializable, ToJson {
     }
 
     static Json readString(CharSequence jsonText, ReadOptions options) throws JsonReadException {
-        var parser = new JsonReader();
-
         try {
-            return parser.read(new PushbackReader(new StringReader(jsonText.toString()), 64), false, options);
+            return JsonReader.read(new PushbackReader(new StringReader(jsonText.toString()), JsonReader.MINIMUM_PUSHBACK_BUFFER_SIZE), options);
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         }
     }
 
     static Json read(Reader reader, ReadOptions options) throws IOException, JsonReadException {
-        var parser = new JsonReader();
-        return parser.read(new PushbackReader(reader, 64), false, options);
+        return JsonReader.read(new PushbackReader(reader, JsonReader.MINIMUM_PUSHBACK_BUFFER_SIZE), options);
     }
 
     static Json read(Reader reader) throws IOException, JsonReadException {
         return read(reader, new ReadOptions());
+    }
+
+    static void readStream(Reader reader, StreamReadOptions options, JsonValueHandler handler) throws IOException, JsonReadException {
+        JsonReader.readStream(
+                new PushbackReader(reader, JsonReader.MINIMUM_PUSHBACK_BUFFER_SIZE),
+                false,
+                options,
+                handler
+        );
     }
 
     static java.lang.String writeString(Json json) {
@@ -472,6 +481,7 @@ public sealed interface Json extends Serializable, ToJson {
      *                                   valid in JavaScript strings.).
      * @param escapeSlash If true (default) the slash / is escaped as \\/
      */
+    @ValueBased
     record WriteOptions(
             boolean escapeUnicode,
             boolean escapeJavascriptSeparators,
@@ -540,6 +550,17 @@ public sealed interface Json extends Serializable, ToJson {
 
         public ReadOptions withUseBigDecimals(boolean useBigDecimals) {
             return new ReadOptions(eofBehavior, useBigDecimals);
+        }
+    }
+
+    record StreamReadOptions(
+            boolean useBigDecimals
+    ) {
+        public StreamReadOptions() {
+            this(false);
+        }
+        public StreamReadOptions withUseBigDecimals(boolean useBigDecimals) {
+            return new StreamReadOptions(useBigDecimals);
         }
     }
 }
