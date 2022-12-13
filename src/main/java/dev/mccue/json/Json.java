@@ -137,6 +137,14 @@ public sealed interface Json extends Serializable, ToJson {
         }
     }
 
+    static Json.Array emptyArray() {
+        return dev.mccue.json.Array.EMPTY;
+    }
+
+    static Json.Object emptyObject() {
+        return dev.mccue.json.Object.EMPTY;
+    }
+
     @Override
     default Json toJson() {
         return this;

@@ -13,6 +13,8 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 record Object(Map<java.lang.String, Json> value) implements Json.Object {
+    static final Object EMPTY = new dev.mccue.json.Object(Map.of());
+
     Object(Map<java.lang.String, Json> value) {
         Objects.requireNonNull(value, "Json.Object value must be nonnull");
         this.value = value

@@ -10,15 +10,12 @@ import java.util.function.UnaryOperator;
 import java.util.stream.Stream;
 
 record Array(List<Json> value) implements Json.Array {
+    static final Array EMPTY = new dev.mccue.json.Array(List.of());
+
     Array(List<Json> value) {
         Objects.requireNonNull(value, "Json.Array value must be nonnull");
         value.forEach(json -> Objects.requireNonNull(json, "Each value in a Json.Array must be nonnull"));
         this.value = List.copyOf(value);
-    }
-
-    @Override
-    public List<Json> value() {
-        return Collections.unmodifiableList(this.value);
     }
 
     @Override
