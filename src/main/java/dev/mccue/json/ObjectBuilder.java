@@ -1,5 +1,8 @@
 package dev.mccue.json;
 
+import dev.mccue.json.internal.InternalInvariant;
+
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -13,8 +16,8 @@ record ObjectBuilder(HashMap<java.lang.String, Json> values) implements Json.Obj
     }
 
     @Override
-    public Json.Object.Builder put(java.lang.String key, ToJson value) {
-        this.values.put(key, value == null ? Json.ofNull() : value.toJson());
+    public Json.Object.Builder put(java.lang.String key, Json value) {
+        this.values.put(key, value == null ? Json.ofNull() : value);
         return this;
     }
 
@@ -26,6 +29,13 @@ record ObjectBuilder(HashMap<java.lang.String, Json> values) implements Json.Obj
 
     @Override
     public Json.Object build() {
-        return Json.Object.of(this.values);
+        return new Object(Map.copyOf(this.values));
+    }
+
+    @InternalInvariant({
+            "no methods called on builder after this one",
+    })
+    Json.Object buildInternal() {
+        return new Object(Collections.unmodifiableMap(this.values));
     }
 }

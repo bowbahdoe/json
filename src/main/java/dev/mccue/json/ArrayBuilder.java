@@ -1,8 +1,8 @@
 package dev.mccue.json;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Objects;
+import dev.mccue.json.internal.InternalInvariant;
+
+import java.util.*;
 
 record ArrayBuilder(ArrayList<Json> values) implements Json.Array.Builder {
     ArrayBuilder() {
@@ -28,6 +28,13 @@ record ArrayBuilder(ArrayList<Json> values) implements Json.Array.Builder {
 
     @Override
     public Json.Array build() {
-        return Json.Array.of(this.values);
+        return new Array(List.copyOf(this.values));
+    }
+
+    @InternalInvariant({
+            "no methods called on builder after this one",
+    })
+    Json.Array buildInternal() {
+        return new Array(Collections.unmodifiableList(this.values));
     }
 }

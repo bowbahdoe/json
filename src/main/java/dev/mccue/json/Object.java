@@ -1,5 +1,7 @@
 package dev.mccue.json;
 
+import dev.mccue.json.internal.InternalInvariant;
+
 import java.io.ObjectInputStream;
 import java.io.Serial;
 import java.io.StringWriter;
@@ -12,23 +14,20 @@ import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-record Object(Map<java.lang.String, Json> value) implements Json.Object {
+record Object(
+        @InternalInvariant({
+                "Must be non-null and no value within can be null.",
+                "No key within can be null.",
+                "No value within can be null.",
+                "Must be either deeply immutable or fully owned by this class.",
+                "Must be unmodifiable.",
+        })
+        Map<java.lang.String, Json> value
+) implements Json.Object {
     static final Object EMPTY = new dev.mccue.json.Object(Map.of());
 
     Object(Map<java.lang.String, Json> value) {
-        Objects.requireNonNull(value, "Json.Object value must be nonnull");
-        this.value = value
-                .entrySet()
-                .stream()
-                .collect(Collectors.toUnmodifiableMap(
-                        entry -> {
-                            Objects.requireNonNull(entry.getKey(), "Json.Object cannot have null keys");
-                            return entry.getKey();
-                        },
-                        entry -> entry.getValue() == null
-                                ? Json.ofNull()
-                                : entry.getValue()
-                ));
+        this.value = value;
     }
 
     @Override

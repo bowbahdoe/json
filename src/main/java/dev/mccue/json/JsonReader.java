@@ -1,13 +1,12 @@
 package dev.mccue.json;
 
 
-import dev.mccue.json.stream.JsonArrayHandler;
-import dev.mccue.json.stream.JsonValueHandler;
-
 import java.io.IOException;
 import java.io.PushbackReader;
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.util.Iterator;
+import java.util.function.Supplier;
 
 final class JsonReader {
     private JsonReader() {}
@@ -25,7 +24,7 @@ final class JsonReader {
         var d = stream.read();
 
         if (a < 0 || b < 0 || c < 0 || d < 0) {
-            throw new JsonReadException("JSON error (end-of-file inside Unicode character escape)");
+            throw JsonReadException.unexpectedEOFInsideUnicodeCharacterEscape();
         }
 
         var s = java.lang.String.valueOf(new char[] { (char) a, (char) b, (char) c, (char) d });;
@@ -38,7 +37,7 @@ final class JsonReader {
         // initial backslash.
         var c = stream.read();
         if (c < 0) {
-            throw new JsonReadException("JSON error (end-of-file inside escaped char)");
+            throw JsonReadException.unexpectedEOFInsideEscapedChar();
         }
 
         return switch ((char) c) {
@@ -49,7 +48,7 @@ final class JsonReader {
             case 'r' -> '\r'; // return
             case 't' -> '\t'; // tab
             case 'u' -> readHexChar(stream);
-            default -> throw new JsonReadException("Invalid escaped char: " + (char) c);
+            default -> throw JsonReadException.invalidEscapeCharacter((char) c);
         };
     }
 
@@ -58,7 +57,7 @@ final class JsonReader {
         while (true) {
             var c = stream.read();
             if (c < 0) {
-                throw new JsonReadException("JSON error (end-of-file inside string)");
+                throw JsonReadException.unexpectedEOFInsideString();
             }
             switch ((char) c) {
                 case '"':
@@ -79,7 +78,7 @@ final class JsonReader {
         int read = stream.read(buffer, 0, MINIMUM_PUSHBACK_BUFFER_SIZE);
         int endIndex = read - 1;
         if (read < 0) {
-            throw new JsonReadException("JSON error (end-of-file inside string)");
+            throw JsonReadException.unexpectedEOFInsideString();
         }
 
         int i = 0;
@@ -144,8 +143,7 @@ final class JsonReader {
             FRAC_DIGIT,
             EXP_SYMBOL,
             EXP_FIRST,
-            EXP_DIGIT,
-
+            EXP_DIGIT
         }
 
         boolean isDecimal;
@@ -167,13 +165,13 @@ final class JsonReader {
                             stage = Stage.FRAC_POINT;
                             continue;
                         }
-                        case '1', '2', '3', '4', '5', '6', '7', '8', '9'-> {
+                        case '1', '2', '3', '4', '5', '6', '7', '8', '9' -> {
                             buffer.append((char) c);
                             stage = Stage.INT_DIGIT;
                             continue;
                         }
                         default ->
-                            throw new JsonReadException("JSON error (invalid number literal)");
+                                throw JsonReadException.invalidNumberLiteral();
                     }
                 case INT_ZERO:
                     switch (c) {
@@ -188,7 +186,7 @@ final class JsonReader {
                             continue;
                         }
                         default ->
-                            throw new JsonReadException("JSON error (invalid number literal)");
+                                throw JsonReadException.invalidNumberLiteral();
                     }
                 case INT_DIGIT:
                     // at this point, there is at least one digit
@@ -214,7 +212,7 @@ final class JsonReader {
                             break loop;
                         }
                         default -> {
-                            throw new JsonReadException("JSON error (invalid number literal)");
+                            throw JsonReadException.invalidNumberLiteral();
                         }
                     }
                 case FRAC_POINT:
@@ -236,7 +234,7 @@ final class JsonReader {
                         }
                         default -> {
                             // Disallow zero-padded numbers or invalid characters
-                            throw new JsonReadException("JSON error (invalid number literal)");
+                            throw JsonReadException.invalidNumberLiteral();
                         }
                     }
                 case FRAC_FIRST:
@@ -248,7 +246,7 @@ final class JsonReader {
                             continue;
                         }
                         default -> {
-                            throw new JsonReadException("JSON error (invalid number literal)");
+                            throw JsonReadException.invalidNumberLiteral();
                         }
                     }
                 case FRAC_DIGIT:
@@ -271,7 +269,7 @@ final class JsonReader {
                         }
                         default -> {
                             // Disallow zero-padded numbers or invalid characters
-                            throw new JsonReadException("JSON error (invalid number literal)");
+                            throw JsonReadException.invalidNumberLiteral();
                         }
                     }
                 case EXP_SYMBOL:
@@ -286,7 +284,8 @@ final class JsonReader {
                             stage = Stage.EXP_DIGIT;
                             continue;
                         }
-                        default -> throw new JsonReadException();
+                        default ->
+                                throw JsonReadException.invalidNumberLiteral();
                     }
                 case EXP_FIRST:
                     switch (c) {
@@ -295,7 +294,8 @@ final class JsonReader {
                             stage = Stage.EXP_DIGIT;
                             continue;
                         }
-                        default -> throw new JsonReadException("JSON error (invalid number literal)");
+                        default ->
+                                throw JsonReadException.invalidNumberLiteral();
                     }
                 case EXP_DIGIT:
                     switch (c) {
@@ -311,7 +311,7 @@ final class JsonReader {
                         }
                         default -> {
                             // Disallow zero-padded numbers or invalid characters
-                            throw new JsonReadException("JSON error (invalid number literal)");
+                            throw JsonReadException.invalidNumberLiteral();
                         }
                     }
             }
@@ -347,10 +347,43 @@ final class JsonReader {
         }
     }
 
-    private static void readArrayHelper(
+    private static /* @Nullable */ java.lang.String readKey(PushbackReader stream) throws IOException {
+        var c = nextToken(stream);
+        if (c == '\"') {
+            var key = readQuotedString(stream);
+            if ((int) ':' == nextToken(stream)) {
+                return key;
+            }
+            else {
+                throw JsonReadException.missingColonInObject();
+            }
+        }
+        else {
+            if (c == '}') {
+                return null;
+            }
+            else {
+                throw JsonReadException.nonStringKeyInObject((char) c);
+            }
+        }
+    }
+
+    private static boolean readUll(PushbackReader stream) throws IOException {
+        return stream.read() == 'u' && stream.read() == 'l' && stream.read() == 'l';
+    }
+
+    private static boolean readRue(PushbackReader stream) throws IOException {
+        return stream.read() == 'r' && stream.read() == 'u' && stream.read() == 'e';
+    }
+
+    private static boolean readAlse(PushbackReader stream) throws IOException {
+        return stream.read() == 'a' && stream.read() == 'l' && stream.read() == 's' && stream.read() == 'e';
+    }
+
+    private static void readArrayHelperStream(
             PushbackReader stream,
             Json.StreamReadOptions options,
-            JsonArrayHandler arrayHandler
+            Json.ArrayHandler arrayHandler
     ) throws IOException {
         while (true) {
             readStream(stream, true, options, arrayHandler);
@@ -361,55 +394,34 @@ final class JsonReader {
                 case ',':
                     continue;
                 default:
-                    throw new JsonReadException("JSON error (invalid array)");
+                    throw JsonReadException.invalidArray();
             }
         }
     }
 
-    private static void readArray(
+    private static void readArrayStream(
             PushbackReader stream,
             Json.StreamReadOptions options,
-            JsonValueHandler valueHandler
+            Json.ValueHandler valueHandler
     ) throws IOException {
         var arrayHandler = valueHandler.onArrayStart();
         var c = nextToken(stream);
         switch (c) {
-            case ']':
-                arrayHandler.onArrayEnd();
-            case ',':
-                throw new JsonReadException("JSON error (invalid array)");
-            default: {
+            case ']' ->
+                    arrayHandler.onArrayEnd();
+            case ',' ->
+                    throw JsonReadException.invalidArray();
+            default -> {
                 stream.unread(c);
-                readArrayHelper(stream, options, arrayHandler);
+                readArrayHelperStream(stream, options, arrayHandler);
             }
         }
     }
 
-    private static /* @Nullable */ java.lang.String readKey(PushbackReader stream) throws IOException {
-        var c = nextToken(stream);
-        if (c == '\"') {
-            var key = readQuotedString(stream);
-            if ((int) ':' == nextToken(stream)) {
-                return key;
-            }
-            else {
-                throw new JsonReadException("JSON error (missing `:` in object)");
-            }
-        }
-        else {
-            if (c == '}') {
-                return null;
-            }
-            else {
-                throw new JsonReadException("JSON error (non-string key in object), found `" + (char) c + "`, expected `\"`");
-            }
-        }
-    }
-
-    private static void readObject(
+    private static void readObjectStream(
             PushbackReader stream,
             Json.StreamReadOptions options,
-            JsonValueHandler valueHandler
+            Json.ValueHandler valueHandler
     ) throws IOException {
         boolean readSomeEntry = false;
         var objectHandler = valueHandler.onObjectStart();
@@ -426,12 +438,12 @@ final class JsonReader {
                         objectHandler.objectEnd();
                         return;
                     default:
-                        throw new JsonReadException("JSON error (missing entry in object)");
+                        throw JsonReadException.missingEntryInObject();
                 }
             }
             else {
                 if (readSomeEntry) {
-                    throw new JsonReadException("JSON error empty entry in object is not allowed");
+                    throw JsonReadException.emptyEntryInObject();
                 }
                 else {
                     return;
@@ -442,67 +454,67 @@ final class JsonReader {
 
     static void readStream(
             PushbackReader stream,
-            boolean eofError,
+            boolean throwIfEofEncountered,
             Json.StreamReadOptions options,
-            JsonValueHandler valueHandler
+            Json.ValueHandler valueHandler
     ) throws IOException {
         int c = nextToken(stream);
         switch (c) {
             case '-', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9' -> {
                 stream.unread(c);
-                valueHandler.onNumber(readNumber(stream, options.useBigDecimals())); // (:bigdec options)
+                valueHandler.onNumber(readNumber(stream, options.useBigDecimals()));
             }
             case '"' -> {
                 valueHandler.onString(readQuotedString(stream));
             }
             case 'n' -> {
-                if (stream.read() == 'u' && stream.read() == 'l' && stream.read() == 'l') {
+                if (readUll(stream)) {
                     valueHandler.onNull();
                 }
                 else {
-                    throw new JsonReadException("JSON error (expected null)");
+                    throw JsonReadException.expectedNull();
                 }
             }
             case 't' -> {
-                if (stream.read() == 'r' && stream.read() == 'u' && stream.read() == 'e') {
+                if (readRue(stream)) {
                     valueHandler.onTrue();
                 }
                 else {
-                    throw new JsonReadException("JSON error (expected true)");
+                    throw JsonReadException.expectedTrue();
                 }
             }
             case 'f' -> {
-                if (stream.read() == 'a' && stream.read() == 'l' && stream.read() == 's' && stream.read() == 'e') {
+                if (readAlse(stream)) {
                     valueHandler.onFalse();
                 }
                 else {
-                    throw new JsonReadException("JSON error (expected false)");
+                    throw JsonReadException.expectedFalse();
                 }
             }
             case '{' -> {
-                readObject(stream, options, valueHandler);
+                readObjectStream(stream, options, valueHandler);
             }
             case '[' -> {
-                readArray(stream, options, valueHandler);
+                readArrayStream(stream, options, valueHandler);
             }
             default -> {
                 if (c < 0) {
-                    if (eofError) {
-                        throw new JsonReadException("JSON error (end-of-file)");
+                    if (throwIfEofEncountered) {
+                        throw JsonReadException.unexpectedEOF();
                     }
                 }
                 else {
-                    throw new JsonReadException("JSON error (unexpected character): " + (char) c);
+                    throw JsonReadException.unexpectedCharacter((char) c);
                 }
             }
         }
     }
 
     static Json read(PushbackReader stream, Json.ReadOptions options) throws IOException {
-        var handler = new Handlers.BaseTreeValueHandler(options.eofBehavior());
+        var handler = new Handlers.BaseTreeValueHandler();
         readStream(stream, false, new Json.StreamReadOptions(options.useBigDecimals()), handler);
         if (handler.result == null && options.eofBehavior() == Json.EOFBehavior.THROW_EXCEPTION) {
-            throw new JsonReadException("JSON error (end-of-file)");
+            throw JsonReadException.unexpectedEOF();
         }
         else {
             return handler.result;

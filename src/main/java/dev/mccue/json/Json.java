@@ -1,11 +1,11 @@
 package dev.mccue.json;
 
 import dev.mccue.json.internal.ValueBased;
-import dev.mccue.json.stream.JsonValueHandler;
 
 import java.io.*;
 import java.math.BigDecimal;
 import java.util.*;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 /**
@@ -180,6 +180,10 @@ public sealed interface Json extends Serializable, ToJson {
         public abstract boolean isIntegral();
 
         static Number of(BigDecimal value) {
+            Objects.requireNonNull(
+                    value,
+                    "bigDecimalValue must not be null."
+            );
             return new dev.mccue.json.BigDecimal(value);
         }
 
@@ -220,10 +224,13 @@ public sealed interface Json extends Serializable, ToJson {
 
     sealed interface Array extends Json, List<Json> permits dev.mccue.json.Array {
         static Array of(Json... values) {
-            return new dev.mccue.json.Array(Arrays.asList(values));
+            return of(Arrays.asList(values));
         }
+
         static Array of(List<Json> value) {
-            return new dev.mccue.json.Array(value);
+            Objects.requireNonNull(value, "Json.Array value must be nonnull");
+            value.forEach(json -> Objects.requireNonNull(json, "Each value in a Json.Array must be nonnull"));
+            return new dev.mccue.json.Array(List.copyOf(value));
         }
 
         static Builder builder() {
@@ -309,8 +316,17 @@ public sealed interface Json extends Serializable, ToJson {
     }
 
     sealed interface Object extends Json, Map<java.lang.String, Json> permits dev.mccue.json.Object {
-        static Object of(Map<java.lang.String, Json> value) {
-            return new dev.mccue.json.Object(value);
+        static Object of(Map<java.lang.String, ? extends Json> value) {
+            return new dev.mccue.json.Object(value
+                    .entrySet()
+                    .stream()
+                    .collect(Collectors.toUnmodifiableMap(
+                            entry -> {
+                                Objects.requireNonNull(entry.getKey(), "Json.Object cannot have null keys");
+                                return entry.getKey();
+                            },
+                            entry -> Json.of(entry.getValue())
+                    )));
         }
 
         static Builder builder() {
@@ -322,7 +338,7 @@ public sealed interface Json extends Serializable, ToJson {
         }
 
         sealed interface Builder permits ObjectBuilder {
-            Builder put(java.lang.String key, ToJson value);
+            Builder put(java.lang.String key, Json value);
 
             default Builder put(java.lang.String key, java.lang.String value) {
                 return put(key, Json.of(value));
@@ -396,8 +412,8 @@ public sealed interface Json extends Serializable, ToJson {
                 return put(key, Json.of(value));
             }
 
-            default Builder put(java.lang.String key, Json value) {
-                return put(key, (ToJson) value);
+            default Builder put(java.lang.String key, ToJson value) {
+                return put(key, value.toJson());
             }
 
             default Builder put(java.lang.String key, Json.Object value) {
@@ -434,11 +450,20 @@ public sealed interface Json extends Serializable, ToJson {
         return read(reader, new ReadOptions());
     }
 
-    static void readStream(Reader reader, StreamReadOptions options, JsonValueHandler handler) throws IOException, JsonReadException {
+    static void readStream(Reader reader, Json.ValueHandler handler, StreamReadOptions options) throws IOException, JsonReadException {
         JsonReader.readStream(
                 new PushbackReader(reader, JsonReader.MINIMUM_PUSHBACK_BUFFER_SIZE),
                 false,
                 options,
+                handler
+        );
+    }
+
+    static void readStream(Reader reader, Json.ValueHandler handler) throws IOException, JsonReadException {
+        JsonReader.readStream(
+                new PushbackReader(reader, JsonReader.MINIMUM_PUSHBACK_BUFFER_SIZE),
+                false,
+                new StreamReadOptions(),
                 handler
         );
     }
@@ -562,5 +587,74 @@ public sealed interface Json extends Serializable, ToJson {
         public StreamReadOptions withUseBigDecimals(boolean useBigDecimals) {
             return new StreamReadOptions(useBigDecimals);
         }
+    }
+
+    record EventReadOptions(
+            boolean useBigDecimals
+    ) {
+        public EventReadOptions() {
+            this(false);
+        }
+        public EventReadOptions withUseBigDecimals(boolean useBigDecimals) {
+            return new EventReadOptions(useBigDecimals);
+        }
+    }
+
+    interface ObjectHandler {
+        Json.ValueHandler onField(java.lang.String fieldName);
+
+        void objectEnd();
+    }
+
+    interface ArrayHandler extends Json.ValueHandler {
+        void onArrayEnd();
+    }
+
+    interface ValueHandler {
+        Json.ObjectHandler onObjectStart();
+
+        Json.ArrayHandler onArrayStart();
+
+        void onNumber(Json.Number number);
+
+        void onString(java.lang.String value);
+
+        void onNull();
+
+        void onTrue();
+
+        void onFalse();
+    }
+
+    sealed interface Event {
+        @ValueBased
+        record ObjectStart() implements Event {}
+
+        @ValueBased
+        record ObjectEnd() implements Event {}
+
+        @ValueBased
+        record ArrayStart() implements Event {}
+
+        @ValueBased
+        record ArrayEnd() implements Event {}
+
+        @ValueBased
+        record Number(Json.Number value) implements Event {}
+
+        @ValueBased
+        record String(java.lang.String value) implements Event {}
+
+        @ValueBased
+        record Null() implements Event {}
+
+        @ValueBased
+        record True() implements Event {}
+
+        @ValueBased
+        record False() implements Event {}
+
+        @ValueBased
+        record FieldName(java.lang.String value) implements Event {}
     }
 }

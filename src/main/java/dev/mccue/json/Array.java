@@ -1,5 +1,8 @@
 package dev.mccue.json;
 
+import dev.mccue.json.internal.InternalInvariant;
+import dev.mccue.json.internal.ValueBased;
+
 import java.io.Serial;
 import java.io.StringWriter;
 import java.util.*;
@@ -9,14 +12,20 @@ import java.util.function.Predicate;
 import java.util.function.UnaryOperator;
 import java.util.stream.Stream;
 
-record Array(List<Json> value) implements Json.Array {
+@ValueBased
+record Array(
+        @InternalInvariant({
+                "Must be non-null and no value within can be null.",
+                "No value within can be null.",
+                "Must be either deeply immutable or fully owned by this class.",
+                "Must be unmodifiable.",
+        })
+        List<Json> value
+) implements Json.Array {
     static final Array EMPTY = new dev.mccue.json.Array(List.of());
 
-    Array(List<Json> value) {
-        Objects.requireNonNull(value, "Json.Array value must be nonnull");
-        value.forEach(json -> Objects.requireNonNull(json, "Each value in a Json.Array must be nonnull"));
-        this.value = List.copyOf(value);
-    }
+    // must be non-null and no value can be null
+    // invariant
 
     @Override
     public int size() {
