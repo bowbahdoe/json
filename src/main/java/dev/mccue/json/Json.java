@@ -5,59 +5,58 @@ import dev.mccue.json.internal.ValueBased;
 import java.io.*;
 import java.math.BigDecimal;
 import java.util.*;
-import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 /**
  * Immutable tree representation of Json.
  */
-public sealed interface Json extends Serializable, ToJson {
+public sealed interface Json extends Serializable, ToJson, JsonWriteable {
     static Json of(ToJson value) {
         return value == null ? Json.Null.instance() : value.toJson();
     }
 
     static Json of(BigDecimal value) {
-        return value == null ? Json.Null.instance() : new dev.mccue.json.BigDecimal(value);
+        return value == null ? Json.Null.instance() : new BigDecimalImpl(value);
     }
 
     static Json of(double value) {
-        return new dev.mccue.json.Double(value);
+        return new DoubleImpl(value);
     }
 
     static Json of(long value) {
-        return new dev.mccue.json.Long(value);
+        return new LongImpl(value);
     }
 
     static Json of(float value) {
-        return new dev.mccue.json.Double(value);
+        return new DoubleImpl(value);
     }
 
     static Json of(int value) {
-        return new dev.mccue.json.Long(value);
+        return new LongImpl(value);
     }
 
     static Json of(java.lang.Double value) {
-        return value == null ? Json.Null.instance() : new dev.mccue.json.Double(value);
+        return value == null ? Json.Null.instance() : new DoubleImpl(value);
     }
 
     static Json of(java.lang.Long value) {
-        return value == null ? Json.Null.instance() : new dev.mccue.json.Long(value);
+        return value == null ? Json.Null.instance() : new LongImpl(value);
     }
 
     static Json of(Float value) {
-        return value == null ? Json.Null.instance() : new dev.mccue.json.Double(value);
+        return value == null ? Json.Null.instance() : new DoubleImpl(value);
     }
 
     static Json of(Integer value) {
-        return value == null ? Json.Null.instance() : new dev.mccue.json.Long(value);
+        return value == null ? Json.Null.instance() : new LongImpl(value);
     }
 
     static Json of(java.math.BigInteger value) {
-        return value == null ? Json.Null.instance() : new dev.mccue.json.BigInteger(value);
+        return value == null ? Json.Null.instance() : new BigIntegerImpl(value);
     }
 
     static Json of(java.lang.String value) {
-        return value == null ? Json.Null.instance() : new dev.mccue.json.String(value);
+        return value == null ? Json.Null.instance() : new StringImpl(value);
     }
 
     static Json ofNull() {
@@ -84,7 +83,7 @@ public sealed interface Json extends Serializable, ToJson {
     static Json of(Collection<? extends ToJson> jsonList) {
         return jsonList == null
                 ? Json.Null.instance()
-                : new dev.mccue.json.Array(
+                : new ArrayImpl(
                         jsonList.stream()
                                 .map(json -> json == null ? Json.Null.instance() : json.toJson())
                                 .toList()
@@ -94,7 +93,7 @@ public sealed interface Json extends Serializable, ToJson {
     static Json of(Map<java.lang.String, ? extends ToJson> jsonMap) {
         return jsonMap == null
                 ? Json.Null.instance()
-                : new dev.mccue.json.Object(
+                : new ObjectImpl(
                         jsonMap
                                 .entrySet()
                                 .stream()
@@ -112,7 +111,7 @@ public sealed interface Json extends Serializable, ToJson {
     }
 
     static Json.Object.Builder objectBuilder(Map<java.lang.String, ? extends ToJson> object) {
-        if (object instanceof dev.mccue.json.Object o) {
+        if (object instanceof ObjectImpl o) {
             return new ObjectBuilder(new HashMap<>(o));
         }
         else {
@@ -130,7 +129,7 @@ public sealed interface Json extends Serializable, ToJson {
     }
 
     static Json.Array.Builder arrayBuilder(Collection<? extends ToJson> object) {
-        if (object instanceof dev.mccue.json.Array o) {
+        if (object instanceof ArrayImpl o) {
             return new ArrayBuilder(new ArrayList<>(o));
         }
         else {
@@ -141,11 +140,11 @@ public sealed interface Json extends Serializable, ToJson {
     }
 
     static Json.Array emptyArray() {
-        return dev.mccue.json.Array.EMPTY;
+        return ArrayImpl.EMPTY;
     }
 
     static Json.Object emptyObject() {
-        return dev.mccue.json.Object.EMPTY;
+        return ObjectImpl.EMPTY;
     }
 
     @Override
@@ -154,19 +153,21 @@ public sealed interface Json extends Serializable, ToJson {
     }
 
     sealed interface String extends Json, CharSequence permits
-            dev.mccue.json.String {
+            StringImpl {
         java.lang.String value();
 
         static String of(java.lang.String value) {
-            return new dev.mccue.json.String(value);
+            return new StringImpl(value);
         }
     }
 
     sealed abstract class Number extends java.lang.Number implements Json permits
-            dev.mccue.json.BigDecimal,
-            dev.mccue.json.Double,
-            dev.mccue.json.Long,
-            dev.mccue.json.BigInteger {
+            BigDecimalImpl,
+            DoubleImpl,
+            LongImpl,
+            BigIntegerImpl {
+        Number() {}
+
         public abstract BigDecimal bigDecimalValue();
 
         public abstract java.math.BigInteger bigIntegerValue();
@@ -180,31 +181,32 @@ public sealed interface Json extends Serializable, ToJson {
         public abstract boolean isIntegral();
 
         static Number of(BigDecimal value) {
-            Objects.requireNonNull(
-                    value,
-                    "bigDecimalValue must not be null."
-            );
-            return new dev.mccue.json.BigDecimal(value);
+            return new BigDecimalImpl(value);
         }
 
         static Number of(double value) {
-            return new dev.mccue.json.Double(value);
+            return new DoubleImpl(value);
         }
 
         static Number of(long value) {
-            return new dev.mccue.json.Long(value);
+            return new LongImpl(value);
         }
 
         static Number of(float value) {
-            return new dev.mccue.json.Double(value);
+            return new DoubleImpl(value);
         }
 
         static Number of(int value) {
-            return new dev.mccue.json.Long(value);
+            return new LongImpl(value);
         }
 
         static Number of(java.math.BigInteger value) {
-            return new dev.mccue.json.BigInteger(value);
+            return new BigIntegerImpl(value);
+        }
+
+        @Override
+        public void write(JsonGenerator generator) {
+            generator.emitNumber(this);
         }
     }
 
@@ -212,17 +214,29 @@ public sealed interface Json extends Serializable, ToJson {
         boolean value();
 
         static Boolean of(boolean value) {
-            return value ? True.INSTANCE : False.INSTANCE;
+            return value ? TrueImpl.INSTANCE : FalseImpl.INSTANCE;
         }
     }
 
-    sealed interface Null extends Json permits dev.mccue.json.Null {
+    sealed interface True extends Boolean permits TrueImpl {
+        static True instance() {
+            return TrueImpl.INSTANCE;
+        }
+    }
+
+    sealed interface False extends Boolean permits FalseImpl {
+        static False instance() {
+            return FalseImpl.INSTANCE;
+        }
+    }
+
+    sealed interface Null extends Json permits NullImpl {
         static Null instance() {
-            return dev.mccue.json.Null.INSTANCE;
+            return NullImpl.INSTANCE;
         }
     }
 
-    sealed interface Array extends Json, List<Json> permits dev.mccue.json.Array {
+    sealed interface Array extends Json, List<Json> permits ArrayImpl {
         static Array of(Json... values) {
             return of(Arrays.asList(values));
         }
@@ -230,7 +244,7 @@ public sealed interface Json extends Serializable, ToJson {
         static Array of(List<Json> value) {
             Objects.requireNonNull(value, "Json.Array value must be nonnull");
             value.forEach(json -> Objects.requireNonNull(json, "Each value in a Json.Array must be nonnull"));
-            return new dev.mccue.json.Array(List.copyOf(value));
+            return new ArrayImpl(List.copyOf(value));
         }
 
         static Builder builder() {
@@ -315,9 +329,9 @@ public sealed interface Json extends Serializable, ToJson {
         }
     }
 
-    sealed interface Object extends Json, Map<java.lang.String, Json> permits dev.mccue.json.Object {
+    sealed interface Object extends Json, Map<java.lang.String, Json> permits ObjectImpl {
         static Object of(Map<java.lang.String, ? extends Json> value) {
-            return new dev.mccue.json.Object(value
+            return new ObjectImpl(value
                     .entrySet()
                     .stream()
                     .collect(Collectors.toUnmodifiableMap(

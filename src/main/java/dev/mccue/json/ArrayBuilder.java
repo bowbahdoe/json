@@ -28,13 +28,13 @@ record ArrayBuilder(ArrayList<Json> values) implements Json.Array.Builder {
 
     @Override
     public Json.Array build() {
-        return new Array(List.copyOf(this.values));
+        return new ArrayImpl(List.copyOf(this.values));
     }
 
     @InternalInvariant({
             "no methods called on builder after this one",
     })
     Json.Array buildInternal() {
-        return new Array(Collections.unmodifiableList(this.values));
+        return new ArrayImpl(Collections.unmodifiableList(this.values));
     }
 }

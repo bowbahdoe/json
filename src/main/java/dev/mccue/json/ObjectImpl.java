@@ -2,19 +2,15 @@ package dev.mccue.json;
 
 import dev.mccue.json.internal.InternalInvariant;
 
-import java.io.ObjectInputStream;
 import java.io.Serial;
-import java.io.StringWriter;
 import java.util.Collection;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Set;
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 import java.util.function.Function;
-import java.util.stream.Collectors;
 
-record Object(
+record ObjectImpl(
         @InternalInvariant({
                 "Must be non-null and no value within can be null.",
                 "No key within can be null.",
@@ -24,9 +20,9 @@ record Object(
         })
         Map<java.lang.String, Json> value
 ) implements Json.Object {
-    static final Object EMPTY = new dev.mccue.json.Object(Map.of());
+    static final Object EMPTY = new ObjectImpl(Map.of());
 
-    Object(Map<java.lang.String, Json> value) {
+    ObjectImpl(Map<java.lang.String, Json> value) {
         this.value = value;
     }
 
@@ -153,5 +149,15 @@ record Object(
     @Serial
     private java.lang.Object writeReplace() {
         return new JsonSerializationProxy(Json.writeString(this));
+    }
+
+    @Override
+    public void write(JsonGenerator generator) {
+        generator.emitObjectStart();
+        this.forEach((k, v) -> {
+            generator.emitFieldName(k);
+            v.write(generator);
+        });
+        generator.emitObjectEnd();
     }
 }

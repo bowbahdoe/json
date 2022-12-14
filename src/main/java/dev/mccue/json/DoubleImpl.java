@@ -4,10 +4,13 @@ import java.io.Serial;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 
-final class Double extends Json.Number {
+final class DoubleImpl extends Json.Number {
+    @Serial
+    private static final long serialVersionUID = 1L;
+
     private final double doubleValue;
 
-    Double(double doubleValue) {
+    DoubleImpl(double doubleValue) {
         if (java.lang.Double.isInfinite(doubleValue)) {
             throw new IllegalArgumentException("JSON cannot encode an infinite double");
         }
@@ -81,7 +84,7 @@ final class Double extends Json.Number {
     @Override
     public boolean equals(java.lang.Object o) {
         return (this == o) || (
-                o instanceof Double otherDouble &&
+                o instanceof DoubleImpl otherDouble &&
                         this.doubleValue == otherDouble.doubleValue
         );
     }

@@ -4,10 +4,11 @@ import java.io.Serial;
 import java.util.Objects;
 import java.util.stream.IntStream;
 
-record String(@Override java.lang.String value) implements Json.String {
-    String {
+record StringImpl(@Override java.lang.String value) implements Json.String {
+    StringImpl {
         Objects.requireNonNull(value, "Json.String value must be nonnull");
     }
+    @Serial
     @Override
     public int length() {
         return this.value.length();
@@ -51,5 +52,10 @@ record String(@Override java.lang.String value) implements Json.String {
     @Serial
     private java.lang.Object readResolve() {
         throw new IllegalStateException();
+    }
+
+    @Override
+    public void write(JsonGenerator generator) {
+        generator.emitString(this.toString());
     }
 }

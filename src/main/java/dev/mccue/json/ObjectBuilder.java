@@ -29,13 +29,13 @@ record ObjectBuilder(HashMap<java.lang.String, Json> values) implements Json.Obj
 
     @Override
     public Json.Object build() {
-        return new Object(Map.copyOf(this.values));
+        return new ObjectImpl(Map.copyOf(this.values));
     }
 
     @InternalInvariant({
             "no methods called on builder after this one",
     })
     Json.Object buildInternal() {
-        return new Object(Collections.unmodifiableMap(this.values));
+        return new ObjectImpl(Collections.unmodifiableMap(this.values));
     }
 }

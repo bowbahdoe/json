@@ -5,8 +5,6 @@ import java.io.IOException;
 import java.io.PushbackReader;
 import java.math.BigDecimal;
 import java.math.BigInteger;
-import java.util.Iterator;
-import java.util.function.Supplier;
 
 final class JsonReader {
     private JsonReader() {}
@@ -124,10 +122,10 @@ final class JsonReader {
 
     private static Json.Number readDecimal(java.lang.String string, boolean bigDecimal) {
         if (bigDecimal) {
-            return new dev.mccue.json.BigDecimal(new BigDecimal(string));
+            return new BigDecimalImpl(new BigDecimal(string));
         }
         else {
-            return new dev.mccue.json.Double(java.lang.Double.parseDouble(string));
+            return new DoubleImpl(java.lang.Double.parseDouble(string));
         }
     }
 

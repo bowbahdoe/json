@@ -4,10 +4,12 @@ import java.io.Serial;
 import java.math.BigInteger;
 import java.util.Objects;
 
-final class BigDecimal extends Json.Number {
+final class BigDecimalImpl extends Json.Number {
+    @Serial
+    private static final long serialVersionUID = 1L;
     private final java.math.BigDecimal bigDecimalValue;
 
-    BigDecimal(java.math.BigDecimal bigDecimalValue) {
+    BigDecimalImpl(java.math.BigDecimal bigDecimalValue) {
         this.bigDecimalValue = Objects.requireNonNull(
                 bigDecimalValue,
                 "bigDecimalValue must not be null."
@@ -67,7 +69,7 @@ final class BigDecimal extends Json.Number {
     @Override
     public boolean equals(java.lang.Object o) {
         return (this == o) || (
-                o instanceof BigDecimal otherBigDecimal &&
+                o instanceof BigDecimalImpl otherBigDecimal &&
                         this.bigDecimalValue.equals(otherBigDecimal.bigDecimalValue)
         );
     }

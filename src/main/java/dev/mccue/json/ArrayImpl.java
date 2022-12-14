@@ -4,7 +4,6 @@ import dev.mccue.json.internal.InternalInvariant;
 import dev.mccue.json.internal.ValueBased;
 
 import java.io.Serial;
-import java.io.StringWriter;
 import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.IntFunction;
@@ -13,7 +12,7 @@ import java.util.function.UnaryOperator;
 import java.util.stream.Stream;
 
 @ValueBased
-record Array(
+record ArrayImpl(
         @InternalInvariant({
                 "Must be non-null and no value within can be null.",
                 "No value within can be null.",
@@ -22,10 +21,7 @@ record Array(
         })
         List<Json> value
 ) implements Json.Array {
-    static final Array EMPTY = new dev.mccue.json.Array(List.of());
-
-    // must be non-null and no value can be null
-    // invariant
+    static final Array EMPTY = new ArrayImpl(List.of());
 
     @Override
     public int size() {
@@ -195,5 +191,12 @@ record Array(
     @Serial
     private java.lang.Object readResolve() {
         throw new IllegalStateException();
+    }
+
+    @Override
+    public void write(JsonGenerator generator) {
+        generator.emitArrayStart();
+        this.forEach(json -> json.write(generator));
+        generator.emitArrayEnd();
     }
 }

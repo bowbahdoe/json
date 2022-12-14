@@ -12,16 +12,16 @@ final class JsonWriter {
 
     static {
         WRITERS = new IdentityHashMap<>();
-        WRITERS.put(Null.class, (__, out, ___) -> out.append("null"));
-        WRITERS.put(True.class, (__, out, ___) -> out.append("true"));
-        WRITERS.put(False.class, (__, out, ___) -> out.append("false"));
-        WRITERS.put(Long.class, (v, out, ___) -> out.append(v.toString()));
-        WRITERS.put(Double.class, (v, out, ___) -> out.append(v.toString()));
-        WRITERS.put(BigInteger.class, (v, out, ___) -> out.append(v.toString()));
-        WRITERS.put(BigDecimal.class, (v, out, ___) -> out.append(v.toString()));
-        WRITERS.put(String.class, (v, out, options) -> writeString((Json.String) v, out, options));
-        WRITERS.put(Array.class, (v, out, options) -> writeArray((Json.Array) v, out, options));
-        WRITERS.put(Object.class, (v, out, options) -> writeObject((Json.Object) v, out, options));
+        WRITERS.put(NullImpl.class, (__, out, ___) -> out.append("null"));
+        WRITERS.put(TrueImpl.class, (__, out, ___) -> out.append("true"));
+        WRITERS.put(FalseImpl.class, (__, out, ___) -> out.append("false"));
+        WRITERS.put(LongImpl.class, (v, out, ___) -> out.append(v.toString()));
+        WRITERS.put(DoubleImpl.class, (v, out, ___) -> out.append(v.toString()));
+        WRITERS.put(BigIntegerImpl.class, (v, out, ___) -> out.append(v.toString()));
+        WRITERS.put(BigDecimalImpl.class, (v, out, ___) -> out.append(v.toString()));
+        WRITERS.put(StringImpl.class, (v, out, options) -> writeString((Json.String) v, out, options));
+        WRITERS.put(ArrayImpl.class, (v, out, options) -> writeArray((Json.Array) v, out, options));
+        WRITERS.put(ObjectImpl.class, (v, out, options) -> writeObject((Json.Object) v, out, options));
     }
 
     private static final short[] CODEPOINT_DECODER;
@@ -234,8 +234,6 @@ final class JsonWriter {
             return new OptionsWithIndentDepth(options, indentDepth + 1);
         }
     }
-
-
 
     public void write(Json json, Appendable out, Json.WriteOptions options) throws IOException {
         write(json, out, new OptionsWithIndentDepth(options));

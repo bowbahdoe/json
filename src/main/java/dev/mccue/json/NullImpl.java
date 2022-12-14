@@ -2,17 +2,16 @@ package dev.mccue.json;
 
 import java.io.Serial;
 
-enum True implements Json.Boolean {
-    INSTANCE;
+final class NullImpl implements Json.Null {
+    @Serial
+    private static final long serialVersionUID = 1L;
+    static final NullImpl INSTANCE = new NullImpl();
 
-    @Override
-    public boolean value() {
-        return true;
-    }
+    private NullImpl() {}
 
     @Override
     public java.lang.String toString() {
-        return "true";
+        return "null";
     }
 
     @Serial
@@ -20,8 +19,14 @@ enum True implements Json.Boolean {
         return new JsonSerializationProxy(Json.writeString(this));
     }
 
+
     @Serial
     private java.lang.Object readResolve() {
         throw new IllegalStateException();
+    }
+
+    @Override
+    public void write(JsonGenerator generator) {
+        generator.emitNull();
     }
 }

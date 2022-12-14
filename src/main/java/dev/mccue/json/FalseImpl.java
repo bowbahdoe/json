@@ -1,14 +1,18 @@
 package dev.mccue.json;
 
-import java.io.ObjectInputStream;
 import java.io.Serial;
 
-enum Null implements Json.Null {
-    INSTANCE;
+final class FalseImpl implements Json.False {
+    static final FalseImpl INSTANCE = new FalseImpl();
+
+    @Override
+    public boolean value() {
+        return false;
+    }
 
     @Override
     public java.lang.String toString() {
-        return "null";
+        return "false";
     }
 
     @Serial
@@ -16,9 +20,13 @@ enum Null implements Json.Null {
         return new JsonSerializationProxy(Json.writeString(this));
     }
 
-
     @Serial
     private java.lang.Object readResolve() {
         throw new IllegalStateException();
+    }
+
+    @Override
+    public void write(JsonGenerator generator) {
+        generator.emitFalse();
     }
 }
