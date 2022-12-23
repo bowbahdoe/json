@@ -1,7 +1,10 @@
-package dev.mccue.json;
+package dev.mccue.json.internal;
+
+import dev.mccue.json.*;
+import dev.mccue.json.serialization.JsonSerializationProxy;
+import dev.mccue.json.stream.JsonGenerator;
 
 import java.io.Serial;
-import java.io.StringWriter;
 import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.IntFunction;
@@ -9,14 +12,17 @@ import java.util.function.Predicate;
 import java.util.function.UnaryOperator;
 import java.util.stream.Stream;
 
-record Array(List<Json> value) implements Json.Array {
-    static final Array EMPTY = new dev.mccue.json.Array(List.of());
-
-    Array(List<Json> value) {
-        Objects.requireNonNull(value, "Json.Array value must be nonnull");
-        value.forEach(json -> Objects.requireNonNull(json, "Each value in a Json.Array must be nonnull"));
-        this.value = List.copyOf(value);
-    }
+@ValueCandidate
+public record ArrayImpl(
+        @InternalInvariant({
+                "Must be non-null and no value within can be null.",
+                "No value within can be null.",
+                "Must be either deeply immutable or fully owned by this class.",
+                "Must be unmodifiable.",
+        })
+        List<Json> value
+) implements JsonArray {
+    public static final JsonArray EMPTY = new ArrayImpl(List.of());
 
     @Override
     public int size() {
@@ -29,7 +35,7 @@ record Array(List<Json> value) implements Json.Array {
     }
 
     @Override
-    public boolean contains(java.lang.Object o) {
+    public boolean contains(Object o) {
         return this.value.contains(o);
     }
 
@@ -44,7 +50,7 @@ record Array(List<Json> value) implements Json.Array {
     }
 
     @Override
-    public java.lang.Object[] toArray() {
+    public Object[] toArray() {
         return this.value.toArray();
     }
 
@@ -64,7 +70,7 @@ record Array(List<Json> value) implements Json.Array {
     }
 
     @Override
-    public boolean remove(java.lang.Object o) {
+    public boolean remove(Object o) {
         return this.value.remove(o);
     }
 
@@ -134,12 +140,12 @@ record Array(List<Json> value) implements Json.Array {
     }
 
     @Override
-    public int indexOf(java.lang.Object o) {
+    public int indexOf(Object o) {
         return this.value.indexOf(o);
     }
 
     @Override
-    public int lastIndexOf(java.lang.Object o) {
+    public int lastIndexOf(Object o) {
         return this.value.lastIndexOf(o);
     }
 
@@ -179,12 +185,19 @@ record Array(List<Json> value) implements Json.Array {
     }
 
     @Serial
-    private java.lang.Object writeReplace() {
+    private Object writeReplace() {
         return new JsonSerializationProxy(Json.writeString(this));
     }
 
     @Serial
-    private java.lang.Object readResolve() {
+    private Object readResolve() {
         throw new IllegalStateException();
+    }
+
+    @Override
+    public void write(JsonGenerator generator) {
+        generator.writeArrayStart();
+        this.forEach(json -> json.write(generator));
+        generator.writeArrayEnd();
     }
 }

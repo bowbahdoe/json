@@ -1,13 +1,20 @@
-package dev.mccue.json;
+package dev.mccue.json.internal;
+
+import dev.mccue.json.Json;
+import dev.mccue.json.JsonNumber;
+import dev.mccue.json.serialization.JsonSerializationProxy;
 
 import java.io.Serial;
 import java.math.BigInteger;
 import java.util.Objects;
 
-final class BigDecimal extends Json.Number {
+@ValueCandidate
+public final class BigDecimalImpl extends JsonNumber {
+    @Serial
+    private static final long serialVersionUID = 1L;
     private final java.math.BigDecimal bigDecimalValue;
 
-    BigDecimal(java.math.BigDecimal bigDecimalValue) {
+    public BigDecimalImpl(java.math.BigDecimal bigDecimalValue) {
         this.bigDecimalValue = Objects.requireNonNull(
                 bigDecimalValue,
                 "bigDecimalValue must not be null."
@@ -65,9 +72,9 @@ final class BigDecimal extends Json.Number {
     }
 
     @Override
-    public boolean equals(java.lang.Object o) {
+    public boolean equals(Object o) {
         return (this == o) || (
-                o instanceof BigDecimal otherBigDecimal &&
+                o instanceof BigDecimalImpl otherBigDecimal &&
                         this.bigDecimalValue.equals(otherBigDecimal.bigDecimalValue)
         );
     }
@@ -83,12 +90,12 @@ final class BigDecimal extends Json.Number {
     }
 
     @Serial
-    private java.lang.Object writeReplace() {
+    private Object writeReplace() {
         return new JsonSerializationProxy(Json.writeString(this));
     }
 
     @Serial
-    private java.lang.Object readResolve() {
+    private Object readResolve() {
         throw new IllegalStateException();
     }
 }

@@ -1,17 +1,25 @@
-package dev.mccue.json;
+package dev.mccue.json.internal;
+
+import dev.mccue.json.Json;
+import dev.mccue.json.JsonNumber;
+import dev.mccue.json.serialization.JsonSerializationProxy;
 
 import java.io.Serial;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 
-final class Double extends Json.Number {
+@ValueCandidate
+public final class DoubleImpl extends JsonNumber {
+    @Serial
+    private static final long serialVersionUID = 1L;
+
     private final double doubleValue;
 
-    Double(double doubleValue) {
-        if (java.lang.Double.isInfinite(doubleValue)) {
+    public DoubleImpl(double doubleValue) {
+        if (Double.isInfinite(doubleValue)) {
             throw new IllegalArgumentException("JSON cannot encode an infinite double");
         }
-        if (java.lang.Double.isNaN(doubleValue)) {
+        if (Double.isNaN(doubleValue)) {
             throw new IllegalArgumentException("JSON cannot encode a NaN double");
         }
 
@@ -79,9 +87,9 @@ final class Double extends Json.Number {
     }
 
     @Override
-    public boolean equals(java.lang.Object o) {
+    public boolean equals(Object o) {
         return (this == o) || (
-                o instanceof Double otherDouble &&
+                o instanceof DoubleImpl otherDouble &&
                         this.doubleValue == otherDouble.doubleValue
         );
     }
@@ -97,12 +105,12 @@ final class Double extends Json.Number {
     }
 
     @Serial
-    private java.lang.Object writeReplace() {
+    private Object writeReplace() {
         return new JsonSerializationProxy(Json.writeString(this));
     }
 
     @Serial
-    private java.lang.Object readResolve() {
+    private Object readResolve() {
         throw new IllegalStateException();
     }
 }

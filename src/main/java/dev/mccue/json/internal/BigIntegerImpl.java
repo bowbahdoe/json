@@ -1,12 +1,19 @@
-package dev.mccue.json;
+package dev.mccue.json.internal;
+
+import dev.mccue.json.Json;
+import dev.mccue.json.JsonNumber;
+import dev.mccue.json.serialization.JsonSerializationProxy;
 
 import java.io.Serial;
 import java.util.Objects;
 
-final class BigInteger extends Json.Number {
+@ValueCandidate
+public final class BigIntegerImpl extends JsonNumber {
+    @Serial
+    private static final long serialVersionUID = 1L;
     private final java.math.BigInteger bigIntegerValue;
 
-    public BigInteger(java.math.BigInteger bigIntegerValue) {
+    public BigIntegerImpl(java.math.BigInteger bigIntegerValue) {
         this.bigIntegerValue = Objects.requireNonNull(bigIntegerValue, "value must not be null");
     }
 
@@ -61,9 +68,9 @@ final class BigInteger extends Json.Number {
     }
 
     @Override
-    public boolean equals(java.lang.Object o) {
+    public boolean equals(Object o) {
         return (this == o) || (
-                o instanceof BigInteger otherBigInteger &&
+                o instanceof BigIntegerImpl otherBigInteger &&
                         this.bigIntegerValue.equals(otherBigInteger.bigIntegerValue)
         );
     }
@@ -79,12 +86,12 @@ final class BigInteger extends Json.Number {
     }
 
     @Serial
-    private java.lang.Object writeReplace() {
+    private Object writeReplace() {
         return new JsonSerializationProxy(Json.writeString(this));
     }
 
     @Serial
-    private java.lang.Object readResolve() {
+    private Object readResolve() {
         throw new IllegalStateException();
     }
 }
