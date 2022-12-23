@@ -15,7 +15,7 @@ import java.util.function.Function;
  *
  * @param <T> The type that being constructed from the Json.
  */
-interface JsonDecoder<T> {
+public interface JsonDecoder<T> {
     T decode(Json json) throws JsonDecodeException;
 
     default <R> JsonDecoder<R> map(Function<? super T, ? extends R> f) {
