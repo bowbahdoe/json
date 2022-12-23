@@ -1,15 +1,18 @@
-package dev.mccue.json;
+package dev.mccue.json.internal;
 
-import dev.mccue.json.internal.ValueBased;
+import dev.mccue.json.*;
+import dev.mccue.json.internal.ArrayBuilderImpl;
+import dev.mccue.json.internal.ObjectBuilder;
+import dev.mccue.json.internal.ValueCandidate;
 
 import java.util.function.Consumer;
 
 final class Handlers {
     private Handlers() {}
 
-    @ValueBased
-    record TreeObjectHandler(Json.Object.Builder builder, Consumer<Json.Object> onObject) implements Json.ObjectHandler {
-        TreeObjectHandler(Consumer<Json.Object> onObject) {
+    @ValueCandidate
+    record TreeObjectHandler(JsonObject.Builder builder, Consumer<JsonObject> onObject) implements Json.ObjectHandler {
+        TreeObjectHandler(Consumer<JsonObject> onObject) {
             this(Json.objectBuilder(), onObject);
         }
 
@@ -24,18 +27,18 @@ final class Handlers {
         }
     }
 
-    @ValueBased
+    @ValueCandidate
     record TreeArrayHandler(
-            Json.Array.Builder builder,
-            Consumer<Json.Array> onArray
+            JsonArray.Builder builder,
+            Consumer<JsonArray> onArray
     ) implements Json.ArrayHandler {
-        TreeArrayHandler(Consumer<Json.Array> onArray) {
+        TreeArrayHandler(Consumer<JsonArray> onArray) {
             this(Json.arrayBuilder(), onArray);
         }
 
         @Override
         public void onArrayEnd() {
-            onArray.accept(((ArrayBuilder) builder).buildInternal());
+            onArray.accept(((ArrayBuilderImpl) builder).buildInternal());
         }
 
         @Override
@@ -49,13 +52,13 @@ final class Handlers {
         }
 
         @Override
-        public void onNumber(Json.Number number) {
+        public void onNumber(JsonNumber number) {
             builder.add(number);
         }
 
         @Override
         public void onString(java.lang.String value) {
-            builder.add(Json.String.of(value));
+            builder.add(JsonString.of(value));
         }
 
         @Override
@@ -77,7 +80,7 @@ final class Handlers {
     /**
      * Basic handler that reads values into an immutable tree.
      */
-    @ValueBased
+    @ValueCandidate
     record TreeValueHandler(Consumer<Json> onValue) implements Json.ValueHandler {
 
         @Override
@@ -91,13 +94,13 @@ final class Handlers {
         }
 
         @Override
-        public void onNumber(Json.Number number) {
+        public void onNumber(JsonNumber number) {
             onValue.accept(number);
         }
 
         @Override
         public void onString(java.lang.String value) {
-            onValue.accept(Json.String.of(value));
+            onValue.accept(JsonString.of(value));
         }
 
         @Override
@@ -136,7 +139,7 @@ final class Handlers {
         }
 
         @Override
-        public void onNumber(Json.Number number) {
+        public void onNumber(JsonNumber number) {
             delegate.onNumber(number);
         }
 

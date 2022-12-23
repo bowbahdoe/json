@@ -1,12 +1,19 @@
-package dev.mccue.json;
+package dev.mccue.json.internal;
+
+import dev.mccue.json.Json;
+import dev.mccue.json.JsonNumber;
+import dev.mccue.json.serialization.JsonSerializationProxy;
 
 import java.io.Serial;
 import java.math.BigInteger;
 
-final class LongImpl extends Json.Number {
+@ValueCandidate
+public final class LongImpl extends JsonNumber {
+    @Serial
+    private static final long serialVersionUID = 1L;
     private final long longValue;
 
-    LongImpl(long longValue) {
+    public LongImpl(long longValue) {
         this.longValue = longValue;
     }
 
@@ -67,7 +74,7 @@ final class LongImpl extends Json.Number {
     }
 
     @Override
-    public boolean equals(java.lang.Object o) {
+    public boolean equals(Object o) {
         return (this == o) || (
                 o instanceof LongImpl otherLong &&
                         this.longValue == otherLong.longValue
@@ -85,12 +92,12 @@ final class LongImpl extends Json.Number {
     }
 
     @Serial
-    private java.lang.Object writeReplace() {
+    private Object writeReplace() {
         return new JsonSerializationProxy(Json.writeString(this));
     }
 
     @Serial
-    private java.lang.Object readResolve() {
+    private Object readResolve() {
         throw new IllegalStateException();
     }
 }

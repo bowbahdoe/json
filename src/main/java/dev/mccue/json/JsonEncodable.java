@@ -1,5 +1,7 @@
 package dev.mccue.json;
 
+import dev.mccue.json.stream.JsonGenerator;
+
 /**
  * An object that can be converted to JSON.
  *
@@ -20,9 +22,14 @@ package dev.mccue.json;
  *     Json itself.
  * </p>
  */
-public interface ToJson {
+public interface JsonEncodable extends JsonWriteable {
     /**
      * @return A Json representation of the object.
      */
     Json toJson();
+
+    @Override
+    default void write(JsonGenerator generator) {
+        this.toJson().write(generator);
+    }
 }

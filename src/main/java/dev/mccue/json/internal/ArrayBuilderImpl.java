@@ -1,40 +1,41 @@
-package dev.mccue.json;
+package dev.mccue.json.internal;
 
-import dev.mccue.json.internal.InternalInvariant;
+import dev.mccue.json.*;
 
 import java.util.*;
 
-record ArrayBuilder(ArrayList<Json> values) implements Json.Array.Builder {
-    ArrayBuilder() {
+@ValueCandidate
+public record ArrayBuilderImpl(ArrayList<Json> values) implements JsonArray.Builder {
+    public ArrayBuilderImpl() {
         this(new ArrayList<>());
     }
 
-    ArrayBuilder(int initialCapacity) {
+    public ArrayBuilderImpl(int initialCapacity) {
         this(new ArrayList<>(initialCapacity));
     }
 
     @Override
-    public Json.Array.Builder add(Json value) {
+    public JsonArray.Builder add(Json value) {
         this.values.add(value == null ? Json.ofNull() : value);
         return this;
     }
 
     @Override
-    public Json.Array.Builder addAll(Collection<? extends ToJson> value) {
+    public JsonArray.Builder addAll(Collection<? extends JsonEncodable> value) {
         Objects.requireNonNull(value);
         value.forEach(v -> this.values.add(v == null ? Json.ofNull() : v.toJson()));
         return this;
     }
 
     @Override
-    public Json.Array build() {
+    public JsonArray build() {
         return new ArrayImpl(List.copyOf(this.values));
     }
 
     @InternalInvariant({
             "no methods called on builder after this one",
     })
-    Json.Array buildInternal() {
+    JsonArray buildInternal() {
         return new ArrayImpl(Collections.unmodifiableList(this.values));
     }
 }

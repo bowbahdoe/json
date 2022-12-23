@@ -1,9 +1,13 @@
-package dev.mccue.json;
+package dev.mccue.json.internal;
+
+import dev.mccue.json.*;
+import dev.mccue.json.internal.*;
 
 import java.io.IOException;
 import java.util.IdentityHashMap;
 
-final class JsonWriter {
+public final class JsonWriter {
+    public JsonWriter() {}
     private interface Writer {
         void write(Json v, Appendable out, OptionsWithIndentDepth options) throws IOException;
     }
@@ -12,16 +16,16 @@ final class JsonWriter {
 
     static {
         WRITERS = new IdentityHashMap<>();
-        WRITERS.put(NullImpl.class, (__, out, ___) -> out.append("null"));
-        WRITERS.put(TrueImpl.class, (__, out, ___) -> out.append("true"));
-        WRITERS.put(FalseImpl.class, (__, out, ___) -> out.append("false"));
+        WRITERS.put(JsonNull.class, (__, out, ___) -> out.append("null"));
+        WRITERS.put(JsonTrue.class, (__, out, ___) -> out.append("true"));
+        WRITERS.put(JsonFalse.class, (__, out, ___) -> out.append("false"));
         WRITERS.put(LongImpl.class, (v, out, ___) -> out.append(v.toString()));
         WRITERS.put(DoubleImpl.class, (v, out, ___) -> out.append(v.toString()));
         WRITERS.put(BigIntegerImpl.class, (v, out, ___) -> out.append(v.toString()));
         WRITERS.put(BigDecimalImpl.class, (v, out, ___) -> out.append(v.toString()));
-        WRITERS.put(StringImpl.class, (v, out, options) -> writeString((Json.String) v, out, options));
-        WRITERS.put(ArrayImpl.class, (v, out, options) -> writeArray((Json.Array) v, out, options));
-        WRITERS.put(ObjectImpl.class, (v, out, options) -> writeObject((Json.Object) v, out, options));
+        WRITERS.put(StringImpl.class, (v, out, options) -> writeString((JsonString) v, out, options));
+        WRITERS.put(ArrayImpl.class, (v, out, options) -> writeArray((JsonArray) v, out, options));
+        WRITERS.put(ObjectImpl.class, (v, out, options) -> writeObject((JsonObject) v, out, options));
     }
 
     private static final short[] CODEPOINT_DECODER;
@@ -64,7 +68,7 @@ final class JsonWriter {
         out.append(Integer.toHexString(cp));
     }
 
-    private static void writeString(CharSequence s, Appendable out, OptionsWithIndentDepth options) throws IOException {
+    public static void writeString(CharSequence s, Appendable out, OptionsWithIndentDepth options) throws IOException {
         out.append('"');
         for (int i = 0; i < s.length(); i++) {
             char cp = s.charAt(i);
@@ -124,12 +128,12 @@ final class JsonWriter {
         out.append('"');
     }
 
-    private static void writeIndent(Appendable out, OptionsWithIndentDepth options) throws IOException {
+    static void writeIndent(Appendable out, OptionsWithIndentDepth options) throws IOException {
         out.append('\n');
         out.append(" ".repeat(options.indentation() * options.indentDepth));
     }
 
-    private static void writeObject(Json.Object m, Appendable out, OptionsWithIndentDepth options) throws IOException {
+    static void writeObject(JsonObject m, Appendable out, OptionsWithIndentDepth options) throws IOException {
         var indent = options.indent();
         var opts = indent
                 ? options.incrementIndentDepth()
@@ -168,7 +172,7 @@ final class JsonWriter {
         out.append('}');
     }
 
-    private static void writeArray(Json.Array a, Appendable out, OptionsWithIndentDepth options) throws IOException {
+    static void writeArray(JsonArray a, Appendable out, OptionsWithIndentDepth options) throws IOException {
         var indent = options.indent();
         var opts = indent
                 ? options.incrementIndentDepth()
@@ -198,11 +202,11 @@ final class JsonWriter {
     }
 
 
-    private static void write(Json v, Appendable out, OptionsWithIndentDepth options) throws IOException {
+    static void write(Json v, Appendable out, OptionsWithIndentDepth options) throws IOException {
         WRITERS.get(v.getClass()).write(v, out, options);
     }
 
-    private record OptionsWithIndentDepth(
+    public record OptionsWithIndentDepth(
             Json.WriteOptions options,
             int indentDepth
     ) {

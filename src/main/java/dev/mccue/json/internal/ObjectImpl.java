@@ -1,6 +1,8 @@
-package dev.mccue.json;
+package dev.mccue.json.internal;
 
-import dev.mccue.json.internal.InternalInvariant;
+import dev.mccue.json.*;
+import dev.mccue.json.serialization.JsonSerializationProxy;
+import dev.mccue.json.stream.JsonGenerator;
 
 import java.io.Serial;
 import java.util.Collection;
@@ -10,7 +12,8 @@ import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
-record ObjectImpl(
+@ValueCandidate
+public record ObjectImpl(
         @InternalInvariant({
                 "Must be non-null and no value within can be null.",
                 "No key within can be null.",
@@ -19,10 +22,10 @@ record ObjectImpl(
                 "Must be unmodifiable.",
         })
         Map<java.lang.String, Json> value
-) implements Json.Object {
-    static final Object EMPTY = new ObjectImpl(Map.of());
+) implements JsonObject {
+    public static final JsonObject EMPTY = new ObjectImpl(Map.of());
 
-    ObjectImpl(Map<java.lang.String, Json> value) {
+    public ObjectImpl(Map<java.lang.String, Json> value) {
         this.value = value;
     }
 
@@ -37,17 +40,17 @@ record ObjectImpl(
     }
 
     @Override
-    public boolean containsKey(java.lang.Object key) {
+    public boolean containsKey(Object key) {
         return this.value.containsKey(key);
     }
 
     @Override
-    public boolean containsValue(java.lang.Object value) {
+    public boolean containsValue(Object value) {
         return this.value.containsValue(value);
     }
 
     @Override
-    public Json get(java.lang.Object key) {
+    public Json get(Object key) {
         return this.value.get(key);
     }
 
@@ -57,7 +60,7 @@ record ObjectImpl(
     }
 
     @Override
-    public Json remove(java.lang.Object key) {
+    public Json remove(Object key) {
         return this.value.remove(key);
     }
 
@@ -87,7 +90,7 @@ record ObjectImpl(
     }
 
     @Override
-    public Json getOrDefault(java.lang.Object key, Json defaultValue) {
+    public Json getOrDefault(Object key, Json defaultValue) {
         return this.value.getOrDefault(key, defaultValue);
     }
 
@@ -107,7 +110,7 @@ record ObjectImpl(
     }
 
     @Override
-    public boolean remove(java.lang.Object key, java.lang.Object value) {
+    public boolean remove(Object key, java.lang.Object value) {
         return this.value.remove(key, value);
     }
 
@@ -147,17 +150,17 @@ record ObjectImpl(
     }
 
     @Serial
-    private java.lang.Object writeReplace() {
+    private Object writeReplace() {
         return new JsonSerializationProxy(Json.writeString(this));
     }
 
     @Override
     public void write(JsonGenerator generator) {
-        generator.emitObjectStart();
+        generator.writeObjectStart();
         this.forEach((k, v) -> {
-            generator.emitFieldName(k);
+            generator.writeFieldName(k);
             v.write(generator);
         });
-        generator.emitObjectEnd();
+        generator.writeObjectEnd();
     }
 }

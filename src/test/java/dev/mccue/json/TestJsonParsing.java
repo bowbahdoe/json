@@ -1,11 +1,14 @@
-import dev.mccue.json.Json;
+package dev.mccue.json;
+
 import org.junit.jupiter.api.Test;
 
+import java.io.StringReader;
 import java.math.BigInteger;
 import java.util.List;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public final class TestJsonParsing {
     @Test
@@ -49,6 +52,18 @@ public final class TestJsonParsing {
         assertEquals(
                 Json.of(123),
                 Json.readString("123")
+        );
+    }
+
+    @Test
+    public void readNumberWithEButNoExponent() {
+        assertThrows(
+                JsonReadException.class,
+                () -> Json.readString("123E")
+        );
+        assertThrows(
+                JsonReadException.class,
+                () -> Json.readString("123e")
         );
     }
 
@@ -120,6 +135,87 @@ public final class TestJsonParsing {
                             "__": [ true, false ]
                         }
                         """)
+        );
+    }
+
+    @Test
+    public void failOnUnclosed() {
+        assertThrows(
+                JsonReadException.class,
+                () -> Json.readString("[{, 1]")
+        );
+        assertThrows(
+                JsonReadException.class,
+                () -> Json.readString("[{")
+        );
+        assertThrows(
+                JsonReadException.class,
+                () -> Json.readString("{")
+        );
+    }
+
+    @Test
+    public void testDecodingObject() {
+        var j =  Json.readString("""
+                        {
+                            "abc": 123,
+                            "def": {
+                                "ghi": [
+                                    "jkl",
+                                    "mno"
+                                ]
+                            },
+                            "qrs": ["tuv"],
+                            "wx": {"y": "z"},
+                            "_": null,
+                            "__": [ true, false ]
+                        }
+                        """);
+        assertEquals(
+                (long) JsonDecoder.field(j, "abc", JsonDecoder::long_),
+                123
+        );
+
+        assertEquals(
+                JsonDecoder.field(j, "qrs", JsonDecoder.array((JsonDecoder<String>) JsonDecoder::string)),
+                List.of("tuv")
+        );
+
+        assertEquals(
+                JsonDecoder.field(j,"def", JsonDecoder.field("ghi", JsonDecoder.index(0, JsonDecoder::string))),
+                "jkl"
+        );
+
+        assertEquals(
+                JsonDecoder.field(j,"_", __ -> __),
+                JsonNull.instance()
+        );
+
+        assertEquals(
+                JsonDecoder.field(j,"_", JsonDecoder::null_),
+                (JsonObject) null
+        );
+    }
+
+    @Test
+    public void testReadMultipleTopLevelForms() {
+        var reader = Json.reader(new StringReader("{} {} \"aaaa\" \"\" {} [1213213123]  {\"aa\": 333}"));
+        var forms = reader.stream().toList();
+        assertEquals(
+                List.of(
+                        JsonObject.of(Map.of()),
+                        JsonObject.of(Map.of()),
+                        JsonString.of("aaaa"),
+                        JsonString.of(""),
+                        JsonObject.of(Map.of()),
+                        JsonArray.of(
+                                JsonNumber.of(1213213123)
+                        ),
+                        JsonObject.of(Map.of(
+                                "aa", JsonNumber.of(333)
+                        ))
+                ),
+                forms
         );
     }
 }

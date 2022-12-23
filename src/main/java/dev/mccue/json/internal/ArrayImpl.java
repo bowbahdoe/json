@@ -1,7 +1,8 @@
-package dev.mccue.json;
+package dev.mccue.json.internal;
 
-import dev.mccue.json.internal.InternalInvariant;
-import dev.mccue.json.internal.ValueBased;
+import dev.mccue.json.*;
+import dev.mccue.json.serialization.JsonSerializationProxy;
+import dev.mccue.json.stream.JsonGenerator;
 
 import java.io.Serial;
 import java.util.*;
@@ -11,8 +12,8 @@ import java.util.function.Predicate;
 import java.util.function.UnaryOperator;
 import java.util.stream.Stream;
 
-@ValueBased
-record ArrayImpl(
+@ValueCandidate
+public record ArrayImpl(
         @InternalInvariant({
                 "Must be non-null and no value within can be null.",
                 "No value within can be null.",
@@ -20,8 +21,8 @@ record ArrayImpl(
                 "Must be unmodifiable.",
         })
         List<Json> value
-) implements Json.Array {
-    static final Array EMPTY = new ArrayImpl(List.of());
+) implements JsonArray {
+    public static final JsonArray EMPTY = new ArrayImpl(List.of());
 
     @Override
     public int size() {
@@ -34,7 +35,7 @@ record ArrayImpl(
     }
 
     @Override
-    public boolean contains(java.lang.Object o) {
+    public boolean contains(Object o) {
         return this.value.contains(o);
     }
 
@@ -49,7 +50,7 @@ record ArrayImpl(
     }
 
     @Override
-    public java.lang.Object[] toArray() {
+    public Object[] toArray() {
         return this.value.toArray();
     }
 
@@ -69,7 +70,7 @@ record ArrayImpl(
     }
 
     @Override
-    public boolean remove(java.lang.Object o) {
+    public boolean remove(Object o) {
         return this.value.remove(o);
     }
 
@@ -139,12 +140,12 @@ record ArrayImpl(
     }
 
     @Override
-    public int indexOf(java.lang.Object o) {
+    public int indexOf(Object o) {
         return this.value.indexOf(o);
     }
 
     @Override
-    public int lastIndexOf(java.lang.Object o) {
+    public int lastIndexOf(Object o) {
         return this.value.lastIndexOf(o);
     }
 
@@ -184,19 +185,19 @@ record ArrayImpl(
     }
 
     @Serial
-    private java.lang.Object writeReplace() {
+    private Object writeReplace() {
         return new JsonSerializationProxy(Json.writeString(this));
     }
 
     @Serial
-    private java.lang.Object readResolve() {
+    private Object readResolve() {
         throw new IllegalStateException();
     }
 
     @Override
     public void write(JsonGenerator generator) {
-        generator.emitArrayStart();
+        generator.writeArrayStart();
         this.forEach(json -> json.write(generator));
-        generator.emitArrayEnd();
+        generator.writeArrayEnd();
     }
 }
