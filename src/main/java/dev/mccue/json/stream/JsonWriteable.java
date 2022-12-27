@@ -1,4 +1,4 @@
-package dev.mccue.json;
+package dev.mccue.json.stream;
 
 import dev.mccue.json.stream.JsonGenerator;
 

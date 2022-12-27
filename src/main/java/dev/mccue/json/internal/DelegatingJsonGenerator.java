@@ -5,8 +5,6 @@ import dev.mccue.json.stream.JsonGenerator;
 import dev.mccue.json.JsonNumber;
 
 class DelegatingJsonGenerator implements JsonGenerator {
-    private final Json.WriteOptions writeOptions;
-    private final Appendable out;
     private JsonGenerator delegate;
 
     DelegatingJsonGenerator(
@@ -14,8 +12,6 @@ class DelegatingJsonGenerator implements JsonGenerator {
             Appendable out,
             JsonGenerator delegate
     ) {
-        this.writeOptions = writeOptions;
-        this.out = out;
         this.delegate = delegate;
     }
 

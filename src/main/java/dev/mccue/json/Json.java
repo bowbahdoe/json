@@ -1,6 +1,8 @@
 package dev.mccue.json;
 
 import dev.mccue.json.internal.*;
+import dev.mccue.json.stream.JsonValueHandler;
+import dev.mccue.json.stream.JsonWriteable;
 
 import java.io.*;
 import java.math.BigDecimal;
@@ -198,7 +200,7 @@ public sealed interface Json
                 .withEOFBehavior(EOFBehavior.RETURN_NULL));
     }
 
-    static void readStream(Reader reader, Json.ValueHandler handler, StreamReadOptions options) throws IOException, JsonReadException {
+    static void readStream(Reader reader, JsonValueHandler handler, StreamReadOptions options) throws IOException, JsonReadException {
         JsonReaderMethods.readStream(
                 new PushbackReader(reader, JsonReaderMethods.MINIMUM_PUSHBACK_BUFFER_SIZE),
                 false,
@@ -207,7 +209,7 @@ public sealed interface Json
         );
     }
 
-    static void readStream(Reader reader, Json.ValueHandler handler) throws IOException, JsonReadException {
+    static void readStream(Reader reader, JsonValueHandler handler) throws IOException, JsonReadException {
         JsonReaderMethods.readStream(
                 new PushbackReader(reader, JsonReaderMethods.MINIMUM_PUSHBACK_BUFFER_SIZE),
                 false,
@@ -340,29 +342,8 @@ public sealed interface Json
         }
     }
 
-    interface ObjectHandler {
-        Json.ValueHandler onField(java.lang.String fieldName);
 
-        void objectEnd();
-    }
 
-    interface ArrayHandler extends Json.ValueHandler {
-        void onArrayEnd();
-    }
 
-    interface ValueHandler {
-        Json.ObjectHandler onObjectStart();
 
-        Json.ArrayHandler onArrayStart();
-
-        void onNumber(JsonNumber number);
-
-        void onString(java.lang.String value);
-
-        void onNull();
-
-        void onTrue();
-
-        void onFalse();
-    }
 }

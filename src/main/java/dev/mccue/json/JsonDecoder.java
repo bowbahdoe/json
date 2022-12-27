@@ -437,6 +437,19 @@ public interface JsonDecoder<T> {
 
                 throw JsonDecodeException.oneOf(Collections.unmodifiableList(errors));
             }
+            catch (Exception e2) {
+                var errors = new ArrayList<JsonDecodeException>();
+                if (e1 instanceof JsonDecodeException.OneOf oneOf) {
+                    errors.addAll(oneOf.getCauses());
+                }
+                else {
+                    errors.add(e1);
+                }
+
+                errors.add(JsonDecodeException.of(e2, json));
+
+                throw JsonDecodeException.oneOf(Collections.unmodifiableList(errors));
+            }
         }
     }
 
@@ -469,6 +482,8 @@ public interface JsonDecoder<T> {
                     } else {
                         errors.add(e2);
                     }
+                } catch (Exception e2) {
+                    errors.add(JsonDecodeException.of(e2, json));
                 }
             }
 

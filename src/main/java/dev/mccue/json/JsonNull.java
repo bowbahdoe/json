@@ -28,7 +28,6 @@ public final class JsonNull implements Json {
         return new JsonSerializationProxy(Json.writeString(this));
     }
 
-
     @Serial
     private Object readResolve() {
         throw new IllegalStateException();

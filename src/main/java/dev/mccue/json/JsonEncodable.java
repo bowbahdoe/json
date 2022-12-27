@@ -1,6 +1,7 @@
 package dev.mccue.json;
 
 import dev.mccue.json.stream.JsonGenerator;
+import dev.mccue.json.stream.JsonWriteable;
 
 /**
  * An object that can be converted to JSON.

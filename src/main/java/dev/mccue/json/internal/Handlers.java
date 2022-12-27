@@ -4,6 +4,9 @@ import dev.mccue.json.*;
 import dev.mccue.json.internal.ArrayBuilderImpl;
 import dev.mccue.json.internal.ObjectBuilder;
 import dev.mccue.json.internal.ValueCandidate;
+import dev.mccue.json.stream.JsonArrayHandler;
+import dev.mccue.json.stream.JsonObjectHandler;
+import dev.mccue.json.stream.JsonValueHandler;
 
 import java.util.function.Consumer;
 
@@ -11,13 +14,13 @@ final class Handlers {
     private Handlers() {}
 
     @ValueCandidate
-    record TreeObjectHandler(JsonObject.Builder builder, Consumer<JsonObject> onObject) implements Json.ObjectHandler {
+    record TreeObjectHandler(JsonObject.Builder builder, Consumer<JsonObject> onObject) implements JsonObjectHandler {
         TreeObjectHandler(Consumer<JsonObject> onObject) {
             this(Json.objectBuilder(), onObject);
         }
 
         @Override
-        public Json.ValueHandler onField(java.lang.String fieldName) {
+        public JsonValueHandler onField(java.lang.String fieldName) {
             return new TreeValueHandler(value -> builder.put(fieldName, value));
         }
 
@@ -31,7 +34,7 @@ final class Handlers {
     record TreeArrayHandler(
             JsonArray.Builder builder,
             Consumer<JsonArray> onArray
-    ) implements Json.ArrayHandler {
+    ) implements JsonArrayHandler {
         TreeArrayHandler(Consumer<JsonArray> onArray) {
             this(Json.arrayBuilder(), onArray);
         }
@@ -42,12 +45,12 @@ final class Handlers {
         }
 
         @Override
-        public Json.ObjectHandler onObjectStart() {
+        public JsonObjectHandler onObjectStart() {
             return new TreeObjectHandler(builder::add);
         }
 
         @Override
-        public Json.ArrayHandler onArrayStart() {
+        public JsonArrayHandler onArrayStart() {
             return new TreeArrayHandler(builder::add);
         }
 
@@ -81,15 +84,15 @@ final class Handlers {
      * Basic handler that reads values into an immutable tree.
      */
     @ValueCandidate
-    record TreeValueHandler(Consumer<Json> onValue) implements Json.ValueHandler {
+    record TreeValueHandler(Consumer<Json> onValue) implements JsonValueHandler {
 
         @Override
-        public Json.ObjectHandler onObjectStart() {
+        public JsonObjectHandler onObjectStart() {
             return new TreeObjectHandler(onValue::accept);
         }
 
         @Override
-        public Json.ArrayHandler onArrayStart() {
+        public JsonArrayHandler onArrayStart() {
             return new TreeArrayHandler(onValue::accept);
         }
 
@@ -119,7 +122,7 @@ final class Handlers {
         }
     }
 
-    static final class BaseTreeValueHandler implements Json.ValueHandler {
+    static final class BaseTreeValueHandler implements JsonValueHandler {
         Json result;
         final TreeValueHandler delegate;
 
@@ -129,12 +132,12 @@ final class Handlers {
         }
 
         @Override
-        public Json.ObjectHandler onObjectStart() {
+        public JsonObjectHandler onObjectStart() {
             return delegate.onObjectStart();
         }
 
         @Override
-        public Json.ArrayHandler onArrayStart() {
+        public JsonArrayHandler onArrayStart() {
             return delegate.onArrayStart();
         }
 

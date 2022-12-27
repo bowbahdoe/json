@@ -9,11 +9,10 @@ import dev.mccue.json.stream.JsonGenerator;
 import java.io.Serial;
 import java.math.BigDecimal;
 
-public sealed abstract class JsonNumber extends java.lang.Number implements Json permits
-        BigDecimalImpl,
-        DoubleImpl,
-        LongImpl,
-        BigIntegerImpl {
+public sealed abstract class JsonNumber
+        extends Number
+        implements Json
+        permits BigDecimalImpl, DoubleImpl, LongImpl, BigIntegerImpl {
     @Serial
     private static final long serialVersionUID = 1L;
 

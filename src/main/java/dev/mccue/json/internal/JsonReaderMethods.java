@@ -2,9 +2,11 @@ package dev.mccue.json.internal;
 
 
 import dev.mccue.json.Json;
+import dev.mccue.json.stream.JsonArrayHandler;
 import dev.mccue.json.stream.JsonEvent;
 import dev.mccue.json.JsonNumber;
 import dev.mccue.json.JsonReadException;
+import dev.mccue.json.stream.JsonValueHandler;
 
 import java.io.IOException;
 import java.io.PushbackReader;
@@ -385,7 +387,7 @@ public final class JsonReaderMethods {
     private static void readArrayHelperStream(
             PushbackReader stream,
             Json.StreamReadOptions options,
-            Json.ArrayHandler arrayHandler
+            JsonArrayHandler arrayHandler
     ) throws IOException {
         while (true) {
             readStream(stream, true, options, arrayHandler);
@@ -404,7 +406,7 @@ public final class JsonReaderMethods {
     private static void readArrayStream(
             PushbackReader stream,
             Json.StreamReadOptions options,
-            Json.ValueHandler valueHandler
+            JsonValueHandler valueHandler
     ) throws IOException {
         var arrayHandler = valueHandler.onArrayStart();
         var c = nextToken(stream);
@@ -423,7 +425,7 @@ public final class JsonReaderMethods {
     private static void readObjectStream(
             PushbackReader stream,
             Json.StreamReadOptions options,
-            Json.ValueHandler valueHandler
+            JsonValueHandler valueHandler
     ) throws IOException {
         boolean readSomeEntry = false;
         var objectHandler = valueHandler.onObjectStart();
@@ -459,7 +461,7 @@ public final class JsonReaderMethods {
             PushbackReader stream,
             boolean throwIfEofEncountered,
             Json.StreamReadOptions options,
-            Json.ValueHandler valueHandler
+            JsonValueHandler valueHandler
     ) throws IOException {
         int c = nextToken(stream);
         switch (c) {
