@@ -6,6 +6,8 @@ import dev.mccue.json.stream.JsonWriteable;
 
 import java.io.*;
 import java.math.BigDecimal;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -168,6 +170,14 @@ public sealed interface Json
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         }
+    }
+
+    static Json readFile(Path path) throws IOException, JsonReadException {
+        return readString(Files.readString(path));
+    }
+
+    static Json readFile(Path path, ReadOptions options) throws IOException, JsonReadException {
+        return readString(Files.readString(path), options);
     }
 
     static Json read(Reader reader, ReadOptions options) throws IOException, JsonReadException {
