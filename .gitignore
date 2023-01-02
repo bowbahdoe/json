@@ -1,4 +1,11 @@
+# IntelliJ generated files
 .idea/
-target/
 *.iml
+
+# Eclipse generated files
+.project
+.classpath
+.settings
+
+target/
 .DS_Store
