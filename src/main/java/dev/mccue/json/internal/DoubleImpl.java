@@ -89,8 +89,8 @@ public final class DoubleImpl extends JsonNumber {
     @Override
     public boolean equals(Object o) {
         return (this == o) || (
-                o instanceof DoubleImpl otherDouble &&
-                        this.doubleValue == otherDouble.doubleValue
+                o instanceof JsonNumber otherNumber &&
+                        this.doubleValue == otherNumber.doubleValue()
         );
     }
 

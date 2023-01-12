@@ -76,8 +76,8 @@ public final class LongImpl extends JsonNumber {
     @Override
     public boolean equals(Object o) {
         return (this == o) || (
-                o instanceof LongImpl otherLong &&
-                        this.longValue == otherLong.longValue
+                o instanceof JsonNumber otherNumber &&
+                        this.longValue == otherNumber.longValue()
         );
     }
 

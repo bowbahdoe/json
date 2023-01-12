@@ -74,8 +74,8 @@ public final class BigDecimalImpl extends JsonNumber {
     @Override
     public boolean equals(Object o) {
         return (this == o) || (
-                o instanceof BigDecimalImpl otherBigDecimal &&
-                        this.bigDecimalValue.equals(otherBigDecimal.bigDecimalValue)
+                o instanceof JsonNumber otherNumber &&
+                        this.bigDecimalValue.equals(otherNumber.bigDecimalValue())
         );
     }
 
