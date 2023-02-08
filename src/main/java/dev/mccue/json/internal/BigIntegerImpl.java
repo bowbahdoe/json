@@ -70,7 +70,7 @@ public final class BigIntegerImpl extends JsonNumber {
     @Override
     public boolean equals(Object o) {
         return (this == o) || (
-                o instanceof JsonNumber otherNumber &&
+                o instanceof JsonNumber otherNumber && otherNumber.isIntegral() &&
                         this.bigIntegerValue.equals(otherNumber.bigIntegerValue())
         );
     }

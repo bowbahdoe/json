@@ -40,8 +40,7 @@ public final class DoubleImpl extends JsonNumber {
     public int intValueExact() {
         if (((int) doubleValue) == doubleValue) {
             return (int) doubleValue;
-        }
-        else {
+        } else {
             throw new ArithmeticException(doubleValue + " cannot fit into an int");
         }
     }
@@ -50,8 +49,7 @@ public final class DoubleImpl extends JsonNumber {
     public long longValueExact() {
         if (((long) doubleValue) == doubleValue) {
             return (int) doubleValue;
-        }
-        else {
+        } else {
             throw new ArithmeticException(doubleValue + " cannot fit into an int");
         }
     }
@@ -89,8 +87,9 @@ public final class DoubleImpl extends JsonNumber {
     @Override
     public boolean equals(Object o) {
         return (this == o) || (
-                o instanceof JsonNumber otherNumber &&
-                        this.doubleValue == otherNumber.doubleValue()
+                o instanceof JsonNumber otherNumber && otherNumber.isIntegral()
+                        && (otherNumber instanceof LongImpl || otherNumber instanceof DoubleImpl ?
+                        this.doubleValue == otherNumber.doubleValue() : otherNumber.equals(this))
         );
     }
 

@@ -31,8 +31,7 @@ public final class LongImpl extends JsonNumber {
     public int intValueExact() {
         if (longValue <= Integer.MAX_VALUE && longValue >= Integer.MIN_VALUE) {
             return (int) longValue;
-        }
-        else {
+        } else {
             throw new ArithmeticException(longValue + " cannot fit into an int.");
         }
     }
@@ -76,8 +75,9 @@ public final class LongImpl extends JsonNumber {
     @Override
     public boolean equals(Object o) {
         return (this == o) || (
-                o instanceof JsonNumber otherNumber &&
-                        this.longValue == otherNumber.longValue()
+                o instanceof JsonNumber otherNumber && otherNumber.isIntegral()
+                        && (otherNumber instanceof LongImpl ?
+                        this.longValue == otherNumber.longValue() : otherNumber.equals(this))
         );
     }
 
