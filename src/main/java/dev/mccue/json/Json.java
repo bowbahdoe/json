@@ -116,15 +116,14 @@ public sealed interface Json
 
     static JsonObject.Builder objectBuilder(Map<java.lang.String, ? extends JsonEncodable> object) {
         if (object instanceof JsonObject o) {
-            return new ObjectBuilder(new HashMap<>(o));
+            return new ObjectBuilder(new LinkedHashMap<>(o));
         }
         else {
-            return new ObjectBuilder(new HashMap<>(object.entrySet()
-                    .stream()
-                    .collect(Collectors.toMap(
-                            Map.Entry::getKey,
-                            entry -> Json.of(entry.getValue())
-                    ))));
+            var objectEntries = new LinkedHashMap<String, Json>();
+            for (var entry : object.entrySet()) {
+                objectEntries.put(entry.getKey(), Json.of(entry.getValue()));
+            }
+            return new ObjectBuilder(objectEntries);
         }
     }
 

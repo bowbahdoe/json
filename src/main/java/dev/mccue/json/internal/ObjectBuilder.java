@@ -4,16 +4,17 @@ import dev.mccue.json.*;
 
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 @ValueCandidate
-public record ObjectBuilder(HashMap<java.lang.String, Json> values) implements JsonObject.Builder {
+public record ObjectBuilder(LinkedHashMap<java.lang.String, Json> values) implements JsonObject.Builder {
     public ObjectBuilder() {
-        this(new HashMap<>());
+        this(new LinkedHashMap<>());
     }
 
     public ObjectBuilder(int initialCapacity) {
-        this(new HashMap<>(initialCapacity));
+        this(new LinkedHashMap<>(initialCapacity));
     }
 
     @Override
@@ -30,7 +31,7 @@ public record ObjectBuilder(HashMap<java.lang.String, Json> values) implements J
 
     @Override
     public JsonObject build() {
-        return new ObjectImpl(Map.copyOf(this.values));
+        return new ObjectImpl(MapUtil.orderedCopyOf(this.values));
     }
 
     @InternalInvariant({
