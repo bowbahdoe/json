@@ -210,7 +210,7 @@ public interface JsonDecoder<T> {
 
     static <T> Map<java.lang.String, T> object(Json json, JsonDecoder<? extends T> valueDecoder) throws JsonDecodeException {
         var jsonObject = object(json);
-        var m = new HashMap<String, T>(jsonObject.size());
+        var m = new LinkedHashMap<String, T>(jsonObject.size());
         jsonObject.forEach((key, value) -> {
             try {
                 m.put(key, valueDecoder.decode(value));
