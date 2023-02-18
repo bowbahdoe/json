@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public class JsonDecoderTest {
     @Test
@@ -26,5 +27,10 @@ public class JsonDecoderTest {
                 new ArrayList<>(decoded.entrySet()),
                 new ArrayList<>(obj.entrySet())
         );
+    }
+
+    @Test
+    public void objectDecoderNeedsObject() {
+        assertThrows(JsonDecodeException.class, () -> JsonDecoder.object(Json.of(123)));
     }
 }

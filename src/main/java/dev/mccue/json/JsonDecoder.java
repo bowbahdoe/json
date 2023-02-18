@@ -422,14 +422,14 @@ public interface JsonDecoder<T> {
             catch (JsonDecodeException e2) {
                 var errors = new ArrayList<JsonDecodeException>();
                 if (e1 instanceof JsonDecodeException.OneOf oneOf) {
-                    errors.addAll(oneOf.getCauses());
+                    errors.addAll(oneOf.errors());
                 }
                 else {
                     errors.add(e1);
                 }
 
                 if (e2 instanceof JsonDecodeException.OneOf oneOf) {
-                    errors.addAll(oneOf.getCauses());
+                    errors.addAll(oneOf.errors());
                 }
                 else {
                     errors.add(e2);
@@ -440,7 +440,7 @@ public interface JsonDecoder<T> {
             catch (Exception e2) {
                 var errors = new ArrayList<JsonDecodeException>();
                 if (e1 instanceof JsonDecodeException.OneOf oneOf) {
-                    errors.addAll(oneOf.getCauses());
+                    errors.addAll(oneOf.errors());
                 }
                 else {
                     errors.add(e1);
@@ -467,7 +467,7 @@ public interface JsonDecoder<T> {
         } catch (JsonDecodeException e1) {
             var errors = new ArrayList<JsonDecodeException>();
             if (e1 instanceof JsonDecodeException.OneOf oneOf) {
-                errors.addAll(oneOf.getCauses());
+                errors.addAll(oneOf.errors());
             }
             else {
                 errors.add(e1);
@@ -478,7 +478,7 @@ public interface JsonDecoder<T> {
                     return decoder.decode(json);
                 } catch (JsonDecodeException e2) {
                     if (e2 instanceof JsonDecodeException.OneOf oneOf) {
-                        errors.addAll(oneOf.getCauses());
+                        errors.addAll(oneOf.errors());
                     } else {
                         errors.add(e2);
                     }
