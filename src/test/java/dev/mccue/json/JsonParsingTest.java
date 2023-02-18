@@ -242,4 +242,33 @@ public final class JsonParsingTest {
                 Json.of(-0.5)
         );
     }
+
+    @Test
+    public void testRoundTrip() {
+        var j = Json.readString("""
+                        {
+                            "abc": 123,
+                            "def": {
+                                "ghi": [
+                                    "jkl",
+                                    "mno"
+                                ]
+                            },
+                            "qrs": ["tuv"],
+                            "wx": {"y": "z"},
+                            "_": null,
+                            "__": [ true, false ]
+                        }
+                        """);
+        assertEquals(
+                Json.readString(Json.writeString(j)),
+                j
+        );
+    }
+
+    @Test
+    public void testEscapeChar() {
+        var o = Json.readString("\"\\" + "u0009\"");
+        assertEquals(Json.of("\u0009"), o);
+    }
 }
