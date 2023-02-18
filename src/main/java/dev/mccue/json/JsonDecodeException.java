@@ -223,7 +223,7 @@ public sealed abstract class JsonDecodeException extends RuntimeException {
                             :  "Problem with the value at json" + String.join("", context) +  ":\n\n    "
             );
 
-            return introduction + indent(Json.writeString(json, new Json.WriteOptions().withIndentation(4))) + "\n\n" + msg;
+            return introduction + indent(Json.writeString(json, new JsonWriteOptions().withIndentation(4))) + "\n\n" + msg;
         }
         else {
             throw new IllegalStateException();

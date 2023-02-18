@@ -4,6 +4,7 @@ import dev.mccue.json.Json;
 
 import java.io.Serial;
 import java.io.Serializable;
+import java.util.Objects;
 
 /**
  * Serialization proxy for the JSON tree structure represented by this
@@ -24,6 +25,10 @@ import java.io.Serializable;
 public record JsonSerializationProxy(String json) implements Serializable {
     @Serial
     private static final long serialVersionUID = 1L;
+
+    public JsonSerializationProxy {
+        Objects.requireNonNull(json);
+    }
 
     @Serial
     public Object readResolve() {

@@ -18,11 +18,7 @@ public final class StringImpl implements JsonString {
     @Serial
     private static final long serialVersionUID = 1L;
 
-    public static final ConcurrentHashMap<String, String> CACHED
-            = new ConcurrentHashMap<>();
-
     private final String value;
-    private final String escaped;
 
     public StringImpl(java.lang.String value) {
         this.value = Objects.requireNonNull(value, "Json.String value must be nonnull");
@@ -30,23 +26,12 @@ public final class StringImpl implements JsonString {
         Function<String, String> escape = s -> {
             var sb = new StringBuilder();
             try {
-                JsonWriter.writeString(s, sb, new JsonWriter.OptionsWithIndentDepth(new Json.WriteOptions()));
+                JsonWriter.writeString(s, sb, new JsonWriter.OptionsWithIndentDepth(new JsonWriteOptions()));
             } catch (IOException e) {
                 throw new UncheckedIOException(e);
             }
             return sb.toString();
         };
-
-        if (value.length() < 64) {
-            this.escaped = CACHED.computeIfAbsent(value, escape);
-        }
-        else {
-            this.escaped = null;
-        }
-    }
-
-    public String escaped() {
-        return this.escaped;
     }
 
     @Override
