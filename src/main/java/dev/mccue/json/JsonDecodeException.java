@@ -54,7 +54,6 @@ public sealed abstract class JsonDecodeException extends RuntimeException {
         private final JsonDecodeException error;
 
         private AtField(String fieldName, JsonDecodeException error) {
-            super(error instanceof Failure ? error : error.getCause());
             Objects.requireNonNull(fieldName, "fieldName must not be null");
             Objects.requireNonNull(error, "error must not be null");
             this.fieldName = fieldName;
@@ -80,7 +79,6 @@ public sealed abstract class JsonDecodeException extends RuntimeException {
         private final JsonDecodeException error;
 
         private AtIndex(int index, JsonDecodeException error) {
-            super(error instanceof Failure ? error : error.getCause());
             Objects.requireNonNull(error);
             this.index = index;
             this.error = error;
@@ -107,16 +105,10 @@ public sealed abstract class JsonDecodeException extends RuntimeException {
         @SuppressWarnings("serial")
         private final List<JsonDecodeException> errors;
 
-        private static <T> T throwNotEmpty() {
-            throw new IllegalArgumentException("errors must be non-empty");
-        }
-
         private OneOf(List<JsonDecodeException> errors) {
-            super(errors.size() > 0
-                    ? (errors.get(0) instanceof Failure
-                            ? errors.get(0)
-                            : errors.get(0).getCause())
-                    : throwNotEmpty());
+            if (errors.size() == 0) {
+                throw new IllegalArgumentException("errors must be non-empty");
+            }
             Objects.requireNonNull(errors, "errors of errors must not be null");
             errors.forEach(error -> Objects.requireNonNull(error, "every error must not be null"));
             this.errors = List.copyOf(errors);
@@ -184,7 +176,7 @@ public sealed abstract class JsonDecodeException extends RuntimeException {
             return getMessageHelp(err, context);
         }
         else if (error instanceof AtIndex atIndex) {
-            var indexName = "[" + atIndex.index + "]";
+            var indexName = "[" + atIndex.index() + "]";
             context.add(indexName);
             return getMessageHelp(atIndex.error(), context);
         }
