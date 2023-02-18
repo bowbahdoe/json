@@ -25,7 +25,6 @@ public class JsonTest {
         assertEquals(JsonNull.instance(), Json.of((Boolean) null));
         assertEquals(JsonNull.instance(), Json.of((List<JsonEncodable>) null));
         assertEquals(JsonNull.instance(), Json.of((Map<String, Json>) null));
-
         assertEquals(JsonNull.instance(), Json.of(() -> null));
     }
 
@@ -45,5 +44,38 @@ public class JsonTest {
                 Json.of(() -> Json.objectBuilder()
                         .put("abc", 123)
                         .build()));
+    }
+
+    @Test
+    public void testOfNumbers() {
+        assertEquals(
+                Json.of(1.2),
+                JsonNumber.of(1.2)
+        );
+        assertEquals(
+                Json.of(1.2f),
+                JsonNumber.of(1.2f)
+        );
+        assertEquals(
+                Json.of(12),
+                JsonNumber.of(12)
+        );
+        assertEquals(
+                Json.of(12L),
+                JsonNumber.of(12L)
+        );
+        assertEquals(
+                Json.of(new BigDecimal("111231231231231.233122")),
+                JsonNumber.of(new BigDecimal("111231231231231.233122"))
+        );
+        assertEquals(
+                Json.of(new BigInteger("111231231231231233122")),
+                JsonNumber.of(new BigInteger("111231231231231233122"))
+        );
+    }
+
+    @Test
+    public void testOfString() {
+        assertEquals(Json.of("abc"), JsonString.of("abc"));
     }
 }
