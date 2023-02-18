@@ -51,26 +51,25 @@ public sealed abstract class JsonDecodeException extends RuntimeException {
         @Serial
         private static final long serialVersionUID = 1L;
         private final String fieldName;
+        private final JsonDecodeException error;
 
         private AtField(String fieldName, JsonDecodeException error) {
-            super(error);
+            super(error instanceof Failure ? error : error.getCause());
             Objects.requireNonNull(fieldName, "fieldName must not be null");
             Objects.requireNonNull(error, "error must not be null");
             this.fieldName = fieldName;
+            this.error = error;
         }
 
         public String fieldName() {
             return this.fieldName;
         }
 
+        public JsonDecodeException error() { return this.error; }
+
         @Override
         public String getMessage() {
             return getMessage(this);
-        }
-
-        @Override
-        public synchronized JsonDecodeException getCause() {
-            return (JsonDecodeException) super.getCause();
         }
     }
 
@@ -78,25 +77,26 @@ public sealed abstract class JsonDecodeException extends RuntimeException {
         @Serial
         private static final long serialVersionUID = 1L;
         private final int index;
+        private final JsonDecodeException error;
 
         private AtIndex(int index, JsonDecodeException error) {
-            super(error);
+            super(error instanceof Failure ? error : error.getCause());
             Objects.requireNonNull(error);
             this.index = index;
+            this.error = error;
         }
 
         public int index() {
             return this.index;
         }
 
-        @Override
-        public String getMessage() {
-            return getMessage(this);
+        public JsonDecodeException error() {
+            return this.error;
         }
 
         @Override
-        public synchronized JsonDecodeException getCause() {
-            return (JsonDecodeException) super.getCause();
+        public String getMessage() {
+            return getMessage(this);
         }
     }
 
@@ -112,24 +112,23 @@ public sealed abstract class JsonDecodeException extends RuntimeException {
         }
 
         private OneOf(List<JsonDecodeException> errors) {
-            super(errors.size() > 0 ? errors.get(0) : throwNotEmpty());
+            super(errors.size() > 0
+                    ? (errors.get(0) instanceof Failure
+                            ? errors.get(0)
+                            : errors.get(0).getCause())
+                    : throwNotEmpty());
             Objects.requireNonNull(errors, "errors of errors must not be null");
             errors.forEach(error -> Objects.requireNonNull(error, "every error must not be null"));
             this.errors = List.copyOf(errors);
         }
 
-        public List<JsonDecodeException> getCauses() {
+        public List<JsonDecodeException> errors() {
             return errors;
         }
 
         @Override
         public String getMessage() {
             return getMessage(this);
-        }
-
-        @Override
-        public synchronized JsonDecodeException getCause() {
-            return (JsonDecodeException) super.getCause();
         }
     }
 
@@ -164,8 +163,8 @@ public sealed abstract class JsonDecodeException extends RuntimeException {
 
     private static String getMessageHelp(JsonDecodeException error, ArrayList<String> context) {
         if (error instanceof AtField atField) {
-            var fieldName = atField.fieldName;
-            var err = atField.getCause();
+            var fieldName = atField.fieldName();
+            var err = atField.error();
 
             boolean isSimple;
             if (fieldName.isEmpty()) {
@@ -187,25 +186,25 @@ public sealed abstract class JsonDecodeException extends RuntimeException {
         else if (error instanceof AtIndex atIndex) {
             var indexName = "[" + atIndex.index + "]";
             context.add(indexName);
-            return getMessageHelp(atIndex.getCause(), context);
+            return getMessageHelp(atIndex.error(), context);
         }
         else if (error instanceof OneOf oneOf) {
-            if (oneOf.errors.isEmpty()) {
+            if (oneOf.errors().isEmpty()) {
                 return "Ran into oneOf with no possibilities" + (context.isEmpty() ? "!" : " at json" + String.join("", context));
             }
-            else if (oneOf.errors.size() == 1) {
-                return getMessageHelp(oneOf.errors.get(0), context);
+            else if (oneOf.errors().size() == 1) {
+                return getMessageHelp(oneOf.errors().get(0), context);
             }
             else {
                 var starter = (context.isEmpty() ? "oneOf" : "oneOf at json" + String.join("", context));
-                var introduction = starter + " failed in the following " + oneOf.errors.size() + " ways:";
+                var introduction = starter + " failed in the following " + oneOf.errors().size() + " ways:";
                 var msg = new StringBuilder(introduction + "\n\n");
-                for (int i = 0; i < oneOf.errors.size(); i++) {
+                for (int i = 0; i < oneOf.errors().size(); i++) {
                     msg.append("\n\n(");
                     msg.append(i + 1);
                     msg.append(") ");
-                    msg.append(indent(getMessage(oneOf.errors.get(i))));
-                    if (i != oneOf.errors.size() - 1) {
+                    msg.append(indent(getMessage(oneOf.errors().get(i))));
+                    if (i != oneOf.errors().size() - 1) {
                         msg.append("\n\n");
                     }
                 }
