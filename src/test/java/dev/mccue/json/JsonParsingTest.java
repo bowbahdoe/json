@@ -10,7 +10,7 @@ import java.util.Map;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-public final class TestJsonParsing {
+public final class JsonParsingTest {
     @Test
     public void readNull() {
         assertEquals(
@@ -216,6 +216,30 @@ public final class TestJsonParsing {
                         ))
                 ),
                 forms
+        );
+    }
+
+    @Test
+    public void testExponentialForms() {
+        assertEquals(
+                Json.readString("123e5"),
+                Json.of(123E5)
+        );
+        assertEquals(
+                Json.readString("123E5"),
+                Json.of(123E5)
+        );
+    }
+
+    @Test
+    public void testNegativesForms() {
+        assertEquals(
+                Json.readString("-5"),
+                Json.of(-5)
+        );
+        assertEquals(
+                Json.readString("-0.5"),
+                Json.of(-0.5)
         );
     }
 }

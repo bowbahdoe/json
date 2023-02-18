@@ -1,6 +1,7 @@
 package dev.mccue.json;
 
 import dev.mccue.json.internal.*;
+import dev.mccue.json.stream.JsonStreamReadOptions;
 import dev.mccue.json.stream.JsonValueHandler;
 import dev.mccue.json.stream.JsonWriteable;
 
@@ -16,7 +17,18 @@ public sealed interface Json
         extends Serializable, JsonEncodable, JsonWriteable
         permits JsonBoolean, JsonNull, JsonString, JsonNumber, JsonArray, JsonObject {
     static Json of(JsonEncodable value) {
-        return value == null ? JsonNull.instance() : value.toJson();
+        if (value == null) {
+            return JsonNull.instance();
+        }
+        else {
+            var asJson = value.toJson();
+            if (asJson == null) {
+                return JsonNull.instance();
+            }
+            else {
+                return asJson;
+            }
+        }
     }
 
     static Json of(BigDecimal value) {
@@ -156,10 +168,10 @@ public sealed interface Json
     }
 
     static Json readString(CharSequence jsonText) throws JsonReadException {
-        return readString(jsonText, new ReadOptions());
+        return readString(jsonText, new JsonReadOptions());
     }
 
-    static Json readString(CharSequence jsonText, ReadOptions options) throws JsonReadException {
+    static Json readString(CharSequence jsonText, JsonReadOptions options) throws JsonReadException {
         try {
             return JsonReaderMethods.read(new PushbackReader(
                     new StringReader(jsonText.toString()), JsonReaderMethods.MINIMUM_PUSHBACK_BUFFER_SIZE
@@ -169,7 +181,7 @@ public sealed interface Json
         }
     }
 
-    static Json read(Reader reader, ReadOptions options) throws IOException, JsonReadException {
+    static Json read(Reader reader, JsonReadOptions options) throws IOException, JsonReadException {
         return JsonReaderMethods.read(
                 new PushbackReader(reader, JsonReaderMethods.MINIMUM_PUSHBACK_BUFFER_SIZE),
                 options
@@ -177,10 +189,10 @@ public sealed interface Json
     }
 
     static Json read(Reader reader) throws IOException, JsonReadException {
-        return read(reader, new ReadOptions());
+        return read(reader, new JsonReadOptions());
     }
 
-    static JsonReader reader(Reader reader, ReadOptions options) {
+    static JsonReader reader(Reader reader, JsonReadOptions options) {
         var pushbackReader = new PushbackReader(
                 reader,
                 JsonReaderMethods.MINIMUM_PUSHBACK_BUFFER_SIZE
@@ -195,11 +207,11 @@ public sealed interface Json
     }
 
     static JsonReader reader(Reader reader) {
-        return reader(reader, new ReadOptions()
-                .withEOFBehavior(EOFBehavior.RETURN_NULL));
+        return reader(reader, new JsonReadOptions()
+                .withEOFBehavior(JsonReadOptions.EOFBehavior.RETURN_NULL));
     }
 
-    static void readStream(Reader reader, JsonValueHandler handler, StreamReadOptions options) throws IOException, JsonReadException {
+    static void readStream(Reader reader, JsonValueHandler handler, JsonStreamReadOptions options) throws IOException, JsonReadException {
         JsonReaderMethods.readStream(
                 new PushbackReader(reader, JsonReaderMethods.MINIMUM_PUSHBACK_BUFFER_SIZE),
                 false,
@@ -212,16 +224,16 @@ public sealed interface Json
         JsonReaderMethods.readStream(
                 new PushbackReader(reader, JsonReaderMethods.MINIMUM_PUSHBACK_BUFFER_SIZE),
                 false,
-                new StreamReadOptions(),
+                new JsonStreamReadOptions(),
                 handler
         );
     }
 
     static java.lang.String writeString(Json json) {
-        return writeString(json, new WriteOptions());
+        return writeString(json, new JsonWriteOptions());
     }
 
-    static java.lang.String writeString(Json json, WriteOptions options) {
+    static java.lang.String writeString(Json json, JsonWriteOptions options) {
         var sw = new StringWriter();
         try {
             write(json, sw, options);
@@ -231,118 +243,11 @@ public sealed interface Json
         return sw.toString();
     }
 
-    static void write(Json json, Writer writer, WriteOptions options) throws IOException {
+    static void write(Json json, Writer writer, JsonWriteOptions options) throws IOException {
         new JsonWriter().write(json, writer, options);
     }
 
     static void write(Json json, Writer writer) throws IOException {
-        new JsonWriter().write(json, writer, new WriteOptions());
+        new JsonWriter().write(json, writer, new JsonWriteOptions());
     }
-
-    /**
-     * @param escapeUnicode If true, non-ascii characters are escaped as \\uXXXX
-     * @param escapeJavascriptSeparators If true (default) the Unicode characters U+2028 and U+2029 will
-     *                                   be escaped as \\u2028 and \\u2029 even if :escape-unicode is
-     *                                   false. (These two characters are valid in pure JSON but are not
-     *                                   valid in JavaScript strings.).
-     * @param escapeSlash If true (default) the slash / is escaped as \\/
-     */
-    @ValueCandidate
-    record WriteOptions(
-            boolean escapeUnicode,
-            boolean escapeJavascriptSeparators,
-            boolean escapeSlash,
-            int indentation
-    ) {
-        public WriteOptions {
-            if (indentation < 0) {
-                throw new IllegalArgumentException("indent must not be less than zero.");
-            }
-        }
-        public WriteOptions() {
-            this(true, true, true, 0);
-        }
-
-        public WriteOptions withEscapeUnicode(boolean escapeUnicode) {
-            return new WriteOptions(escapeUnicode, escapeJavascriptSeparators, escapeSlash, indentation);
-        }
-
-        public WriteOptions withEscapeJavascriptSeparators(boolean escapeJavascriptSeparators) {
-            return new WriteOptions(escapeUnicode, escapeJavascriptSeparators, escapeSlash, indentation);
-        }
-
-        public WriteOptions withEscapeSlash(boolean escapeSlash) {
-            return new WriteOptions(escapeUnicode, escapeJavascriptSeparators, escapeSlash, indentation);
-        }
-
-        public WriteOptions withIndentation(int indentation) {
-            return new WriteOptions(escapeUnicode, escapeJavascriptSeparators, escapeSlash, indentation);
-        }
-    }
-
-    /**
-     * Behavior to exhibit when an EOF is reached and no Json is read.
-     */
-    enum EOFBehavior {
-        /**
-         * Throw an exception.
-         */
-        THROW_EXCEPTION,
-        /**
-         * Return a "true null", not a Json null.
-         */
-        RETURN_NULL
-    }
-
-    /**
-     * @param eofBehavior What to do if an attempted read reaches an EOF without any Json being read.
-     * @param useBigDecimals Whether to use BigDecimals when reading decimal numbers
-     */
-    record ReadOptions(
-            EOFBehavior eofBehavior,
-            boolean useBigDecimals
-    ) {
-        public ReadOptions {
-            Objects.requireNonNull(eofBehavior, "eofBehavior must not be null");
-        }
-
-        public ReadOptions() {
-            this(EOFBehavior.THROW_EXCEPTION, false);
-        }
-
-        public ReadOptions withEOFBehavior(EOFBehavior eofBehavior) {
-            return new ReadOptions(eofBehavior, useBigDecimals);
-        }
-
-        public ReadOptions withUseBigDecimals(boolean useBigDecimals) {
-            return new ReadOptions(eofBehavior, useBigDecimals);
-        }
-    }
-
-    record StreamReadOptions(
-            boolean useBigDecimals
-    ) {
-        public StreamReadOptions() {
-            this(false);
-        }
-        public StreamReadOptions withUseBigDecimals(boolean useBigDecimals) {
-            return new StreamReadOptions(useBigDecimals);
-        }
-    }
-
-    record EventReadOptions(
-            boolean useBigDecimals
-    ) {
-        public EventReadOptions() {
-            this(false);
-        }
-        public EventReadOptions withUseBigDecimals(boolean useBigDecimals) {
-            return new EventReadOptions(useBigDecimals);
-        }
-    }
-
-
-
-
-
 }

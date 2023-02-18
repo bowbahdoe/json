@@ -207,10 +207,10 @@ public final class JsonWriter {
     }
 
     public record OptionsWithIndentDepth(
-            Json.WriteOptions options,
+            JsonWriteOptions options,
             int indentDepth
     ) {
-        OptionsWithIndentDepth(Json.WriteOptions options) {
+        OptionsWithIndentDepth(JsonWriteOptions options) {
             this(options, 0);
         }
 
@@ -239,7 +239,7 @@ public final class JsonWriter {
         }
     }
 
-    public void write(Json json, Appendable out, Json.WriteOptions options) throws IOException {
+    public void write(Json json, Appendable out, JsonWriteOptions options) throws IOException {
         write(json, out, new OptionsWithIndentDepth(options));
     }
 }

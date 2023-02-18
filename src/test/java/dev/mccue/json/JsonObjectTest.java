@@ -9,7 +9,7 @@ import java.util.Map;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 
-public class TestJsonObject {
+public class JsonObjectTest {
     @Test
     public void testObjectBuilderOrdered() {
         var entries = new ArrayList<Map.Entry<String, Json>>();

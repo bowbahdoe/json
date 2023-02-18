@@ -2,10 +2,12 @@ package dev.mccue.json.internal;
 
 
 import dev.mccue.json.Json;
+import dev.mccue.json.JsonReadOptions;
 import dev.mccue.json.stream.JsonArrayHandler;
 import dev.mccue.json.stream.JsonEvent;
 import dev.mccue.json.JsonNumber;
 import dev.mccue.json.JsonReadException;
+import dev.mccue.json.stream.JsonStreamReadOptions;
 import dev.mccue.json.stream.JsonValueHandler;
 
 import java.io.IOException;
@@ -386,7 +388,7 @@ public final class JsonReaderMethods {
 
     private static void readArrayHelperStream(
             PushbackReader stream,
-            Json.StreamReadOptions options,
+            JsonStreamReadOptions options,
             JsonArrayHandler arrayHandler
     ) throws IOException {
         while (true) {
@@ -405,7 +407,7 @@ public final class JsonReaderMethods {
 
     private static void readArrayStream(
             PushbackReader stream,
-            Json.StreamReadOptions options,
+            JsonStreamReadOptions options,
             JsonValueHandler valueHandler
     ) throws IOException {
         var arrayHandler = valueHandler.onArrayStart();
@@ -424,7 +426,7 @@ public final class JsonReaderMethods {
 
     private static void readObjectStream(
             PushbackReader stream,
-            Json.StreamReadOptions options,
+            JsonStreamReadOptions options,
             JsonValueHandler valueHandler
     ) throws IOException {
         boolean readSomeEntry = false;
@@ -460,7 +462,7 @@ public final class JsonReaderMethods {
     public static void readStream(
             PushbackReader stream,
             boolean throwIfEofEncountered,
-            Json.StreamReadOptions options,
+            JsonStreamReadOptions options,
             JsonValueHandler valueHandler
     ) throws IOException {
         int c = nextToken(stream);
@@ -515,236 +517,14 @@ public final class JsonReaderMethods {
         }
     }
 
-    public static Json read(PushbackReader stream, Json.ReadOptions options) throws IOException {
+    public static Json read(PushbackReader stream, JsonReadOptions options) throws IOException {
         var handler = new Handlers.BaseTreeValueHandler();
-        readStream(stream, false, new Json.StreamReadOptions(options.useBigDecimals()), handler);
-        if (handler.result == null && options.eofBehavior() == Json.EOFBehavior.THROW_EXCEPTION) {
+        readStream(stream, false, new JsonStreamReadOptions(options.useBigDecimals()), handler);
+        if (handler.result == null && options.eofBehavior() == JsonReadOptions.EOFBehavior.THROW_EXCEPTION) {
             throw JsonReadException.unexpectedEOF();
         }
         else {
             return handler.result;
-        }
-    }
-
-
-
-
-
-    static final class EventIterator implements Iterator<JsonEvent> {
-        final PushbackReader stream;
-        Json.StreamReadOptions options;
-        State state;
-        JsonEvent next;
-
-        sealed interface State {
-            void advance(EventIterator self) throws IOException;
-        }
-
-        record Terminated() implements State {
-            @Override
-            public void advance(EventIterator self) throws IOException {
-                self.next = null;
-            }
-        }
-
-        record ReadObjectValue(State previous) implements State {
-            @Override
-            public void advance(EventIterator self) throws IOException {
-
-            }
-        }
-
-        record ReadObject(boolean readSomeEntry, State previous) implements State {
-            ReadObject(State previous) {
-                this(false, previous);
-            }
-
-            @Override
-            public void advance(EventIterator self) throws IOException {
-                var key = readKey(self.stream);
-                if (key != null) {
-                    self.next = new JsonEvent.Field(key);
-                }
-                else {
-                    if (readSomeEntry) {
-                        throw JsonReadException.emptyEntryInObject();
-                    }
-                    else {
-                        self.state = previous;
-                    }
-                }
-            }
-        }
-
-
-
-        record ReadArrayHelper(
-                State previous
-        ) implements State {
-
-            @Override
-            public void advance(EventIterator self) throws IOException {
-                char c = (char) nextToken(self.stream);
-                switch (c) {
-                    case ']' -> {
-                        self.next = new JsonEvent.ArrayEnd();
-                        self.state = previous;
-                    }
-                    case ',' -> {
-                        self.state = new Root(true, this);
-                        self.state.advance(self);
-                    }
-                    default -> {
-                        System.out.println("" + c);
-                        throw JsonReadException.invalidArray();
-                    }
-                }
-            }
-        }
-        record ReadArray(
-                State previous
-        ) implements State {
-
-            @Override
-            public void advance(EventIterator self) throws IOException {
-                var c = nextToken(self.stream);
-                switch (c) {
-                    case ']' -> {
-                        self.next = new JsonEvent.ArrayEnd();
-                        self.state = previous;
-                    }
-                    case ',' ->
-                            throw JsonReadException.invalidArray();
-                    default -> {
-                        self.stream.unread(c);
-                        self.state = new Root(true, new ReadArrayHelper(previous));
-                        self.state.advance(self);
-                    }
-                }
-            }
-        }
-        @ValueCandidate
-        record Root(
-                boolean throwIfEofEncountered,
-                State previous
-        ) implements State {
-            Root() {
-                this(false, new Terminated());
-            }
-            @Override
-            public void advance(EventIterator self) throws IOException {
-                int c = nextToken(self.stream);
-                switch (c) {
-                    case '-', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9' -> {
-                        self.stream.unread(c);
-                        self.next = new JsonEvent.Number(
-                                readNumber(self.stream, self.options.useBigDecimals())
-                        );
-                        self.state = previous;
-                    }
-                    case '"' -> {
-                        self.next = new JsonEvent.String(
-                                readQuotedString(self.stream)
-                        );
-                        self.state = previous;
-                    }
-                    case 'n' -> {
-                        if (readUll(self.stream)) {
-                            self.next = new JsonEvent.Null();
-                            self.state = previous;
-                        }
-                        else {
-                            throw JsonReadException.expectedNull();
-                        }
-                    }
-                    case 't' -> {
-                        if (readRue(self.stream)) {
-                            self.next = new JsonEvent.True();
-                            self.state = previous;
-                        }
-                        else {
-                            throw JsonReadException.expectedTrue();
-                        }
-                    }
-                    case 'f' -> {
-                        if (readAlse(self.stream)) {
-                            self.next = new JsonEvent.False();
-                            self.state = previous;
-                        }
-                        else {
-                            throw JsonReadException.expectedFalse();
-                        }
-                    }
-                    case '{' -> {
-                        throw new IllegalStateException("unhandled");
-                    }
-                    case '[' -> {
-                        self.next = new JsonEvent.ArrayStart();
-                        self.state = new ReadArray(this.previous);
-                    }
-                    default -> {
-                        if (c < 0) {
-                            if (throwIfEofEncountered) {
-                                throw JsonReadException.unexpectedEOF();
-                            }
-                        }
-                        else {
-                            throw JsonReadException.unexpectedCharacter((char) c);
-                        }
-                    }
-                }
-            }
-        }
-
-        EventIterator(PushbackReader stream, Json.StreamReadOptions options) {
-            this.stream = stream;
-            this.options = options;
-            this.state = new Root(false, new Terminated());
-        }
-
-        @Override
-        public boolean hasNext() {
-            try {
-                if (state instanceof Root) {
-                    state.advance(this);
-                }
-                return this.next != null;
-            } catch (IOException e) {
-                throw new UncheckedIOException(e);
-            }
-        }
-
-        @Override
-        public JsonEvent next() {
-            try {
-                if (state instanceof Root) {
-                    state.advance(this);
-                }
-                if (state instanceof Terminated && this.next == null) {
-                    throw new NoSuchElementException();
-                }
-                else {
-                    var next = this.next;
-                    state.advance(this);
-                    return next;
-                }
-            } catch (IOException e) {
-                throw new UncheckedIOException(e);
-            }
-        }
-
-        public static void main(String[] args) throws IOException {
-            var iter = new EventIterator(
-                    new PushbackReader(
-                            new StringReader("[1, 2, [], [\"a\", \"b\", true], 3]"),
-                            MINIMUM_PUSHBACK_BUFFER_SIZE
-                    ),
-                    new Json.StreamReadOptions()
-            );
-
-            while (iter.hasNext()) {
-                System.out.println(iter.next());
-            }
         }
     }
 }
