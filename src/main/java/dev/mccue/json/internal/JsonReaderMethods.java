@@ -211,8 +211,12 @@ public final class JsonReaderMethods {
                             stage = Stage.EXP_SYMBOL;
                             continue;
                         }
-                        case 9, 10, 13, 32, ',', ']', '}', -1 -> {
+                        case 9, 10, 13, 32, ',', ']', '}' -> {
                             stream.unread(c);
+                            isDecimal = false;
+                            break loop;
+                        }
+                        case -1 -> {
                             isDecimal = false;
                             break loop;
                         }
@@ -232,8 +236,12 @@ public final class JsonReaderMethods {
                             stage = Stage.EXP_SYMBOL;
                             continue;
                         }
-                        case 9, 10, 13, 32, ',', ']', '}', -1 -> {
+                        case 9, 10, 13, 32, ',', ']', '}' -> {
                             stream.unread(c);
+                            isDecimal = false;
+                            break loop;
+                        }
+                        case -1 -> {
                             isDecimal = false;
                             break loop;
                         }
@@ -266,8 +274,12 @@ public final class JsonReaderMethods {
                             stage = Stage.EXP_SYMBOL;
                             continue;
                         }
-                        case 9, 10, 13, 32, ',', ']', '}', -1 -> {
+                        case 9, 10, 13, 32, ',', ']', '}' -> {
                             stream.unread(c);
+                            isDecimal = true;
+                            break loop;
+                        }
+                        case  -1 -> {
                             isDecimal = true;
                             break loop;
                         }
@@ -306,8 +318,12 @@ public final class JsonReaderMethods {
                         case '0', '1', '2', '3', '4', '5', '6', '7', '8', '9' -> {
                             buffer.append((char) c);
                         }
-                        case 9, 10, 13, 32, ',', ']', '}', -1 -> {
+                        case 9, 10, 13, 32, ',', ']', '}' -> {
                             stream.unread(c);
+                            isDecimal = true;
+                            break loop;
+                        }
+                        case -1 -> {
                             isDecimal = true;
                             break loop;
                         }
@@ -525,7 +541,7 @@ public final class JsonReaderMethods {
 
     public static Json readFullyConsume(PushbackReader stream, JsonReadOptions options) throws IOException {
         var result = read(stream, options);
-        for (int c = stream.read(); c >= 0; c = stream.read()) {
+        for (int c = stream.read(); c > 0; c = stream.read()) {
             switch (c) {
                 case 9, 10, 13, 32 -> {}
                 default -> throw JsonReadException.extraData((char) c);
