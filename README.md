@@ -47,11 +47,12 @@ The non-goals of this library are
 
 ## Reading and Writing
 
+### Read from a String
+
 <details>
     <summary>Show</summary>
 
 
-### Read from a String
 
 ```java
 import dev.mccue.json.Json;
@@ -227,7 +228,7 @@ public class Main {
 
 ## Encoding and Decoding
 
-## Encode a basic object
+### Encode a basic object
 
 <details>
     <summary>Show</summary>
@@ -269,7 +270,7 @@ public class Main {
 
 </details>
 
-## Encode nested objects
+### Encode nested objects
 
 <details>
     <summary>Show</summary>
