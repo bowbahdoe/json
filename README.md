@@ -1,6 +1,6 @@
 # json
 
-<img style="background-color:white;width:fill" src="./bopbop.svg"></img>
+<img src="./bopbop.png"></img>
 
 A JSON Library which is 
 
