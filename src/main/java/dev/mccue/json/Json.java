@@ -259,11 +259,11 @@ public sealed interface Json
         );
     }
 
-    static java.lang.String writeString(Json json) {
+    private static String writeString(Json json) {
         return writeString(json, new JsonWriteOptions());
     }
 
-    static java.lang.String writeString(Json json, JsonWriteOptions options) {
+    private static String writeString(Json json, JsonWriteOptions options) {
         var sw = new StringWriter();
         try {
             write(json, sw, options);
@@ -273,11 +273,27 @@ public sealed interface Json
         return sw.toString();
     }
 
-    static void write(Json json, Writer writer, JsonWriteOptions options) throws IOException {
+    static String writeString(JsonEncodable jsonEncodable) {
+        return writeString(Json.of(jsonEncodable));
+    }
+
+    static String writeString(JsonEncodable jsonEncodable, JsonWriteOptions options) {
+        return writeString(Json.of(jsonEncodable), options);
+    }
+
+    private static void write(Json json, Writer writer, JsonWriteOptions options) throws IOException {
         new JsonWriter().write(json, writer, options);
     }
 
-    static void write(Json json, Writer writer) throws IOException {
+    private static void write(Json json, Writer writer) throws IOException {
         new JsonWriter().write(json, writer, new JsonWriteOptions());
+    }
+
+    static void write(JsonEncodable jsonEncodable, Writer writer, JsonWriteOptions options) throws IOException {
+        write(Json.of(jsonEncodable), writer, options);
+    }
+
+    static void write(JsonEncodable jsonEncodable, Writer writer) throws IOException {
+        write(Json.of(jsonEncodable), writer);
     }
 }

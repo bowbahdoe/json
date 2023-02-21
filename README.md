@@ -42,12 +42,12 @@ The non-goals of this library are
 2. Support every extension to the JSON spec.
 3. Handle documents which cannot fit into memory.
 
-## Examples and Explanation
-
-## Data Model
+## Explanation
 
 
-### Reading from a String
+## Reading and Writing
+
+### Read from a String
 
 ```java
 import dev.mccue.json.Json;
@@ -63,6 +63,51 @@ public class Main {
                 """);
 
         System.out.println(parsed);
+    }
+}
+```
+
+### Read from a file
+
+```java
+import dev.mccue.json.Json;
+
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+
+public class Main {
+    public static void main(String[] args) throws IOException {
+        Json parsed;
+        try (var reader = Files.newBufferedReader(Path.of("in.json"))) {
+            parsed = Json.read(reader);
+        }
+
+        System.out.println(parsed);
+    }
+}
+```
+
+### Read multiple top level forms
+
+```java
+import dev.mccue.json.Json;
+
+import java.io.StringReader;
+
+public class Main {
+    public static void main(String[] args) {
+        String source = """
+                { "name": "gonzo" }
+                { "name": "kermit" }
+                { "name": "ms. piggy" }
+                """;
+
+        var reader = Json.reader(new StringReader(source));
+
+        for (var muppet : reader) {
+            System.out.println(muppet);
+        }
     }
 }
 ```
@@ -124,4 +169,137 @@ public class Main {
 }
 ```
 
+### Write to a file
 
+```java 
+import dev.mccue.json.Json;
+
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+
+public class Main {
+    public static void main(String[] args) throws IOException {
+        Json bopBop = Json.objectBuilder()
+                .put("name", "Bop Bop")
+                .put("age", 1)
+                .put("cute", true)
+                .build();
+
+        try (var writer = Files.newBufferedWriter(
+                Path.of("out.json")
+        )) {
+            Json.write(bopBop, writer);
+        }
+    }
+}
+```
+
+## Encoding and Decoding
+
+## Encode a basic object
+
+```java
+import dev.mccue.json.Json;
+import dev.mccue.json.JsonEncodable;
+import dev.mccue.json.JsonWriteOptions;
+
+record Muppet(String name, boolean canSing)
+        implements JsonEncodable {
+
+    @Override
+    public Json toJson() {
+        return Json.objectBuilder()
+                .put("name", this.name)
+                .put("canSing", this.canSing)
+                .build();
+    }
+}
+
+public class Main {
+    public static void main(String[] args) {
+        var animal = new Muppet("animal", false);
+        System.out.println(Json.writeString(
+                animal,
+                new JsonWriteOptions()
+                        .withIndentation(4)
+        ));
+    }
+}
+```
+```
+{
+    "name": "animal",
+    "canSing": false
+}
+```
+
+## Encode nested objects
+
+```java
+import dev.mccue.json.Json;
+import dev.mccue.json.JsonEncodable;
+import dev.mccue.json.JsonWriteOptions;
+
+import java.util.List;
+
+record Muppet(String name)
+        implements JsonEncodable {
+
+    @Override
+    public Json toJson() {
+        return Json.objectBuilder()
+                .put("name", this.name)
+                .build();
+    }
+}
+
+record Movie(String title, List<Muppet> cast)
+        implements JsonEncodable{
+
+    @Override
+    public Json toJson() {
+        return Json.objectBuilder()
+                .put("title", this.title)
+                .put("cast", this.cast)
+                .build();
+    }
+}
+
+public class Main {
+    public static void main(String[] args) {
+        var kermit = new Muppet("kermit");
+        var gonzo = new Muppet("gonzo");
+        var rizzo = new Muppet("rizzo");
+
+        var treasureIsland = new Movie(
+                "Treasure Island",
+                List.of(kermit, gonzo, rizzo)
+        );
+
+        System.out.println(Json.writeString(
+                treasureIsland,
+                new JsonWriteOptions()
+                        .withIndentation(4)
+        ));
+    }
+}
+```
+```
+{
+    "title": "Treasure Island",
+    "cast": [
+        {
+            "name": "kermit"
+        },
+        {
+            "name": "gonzo"
+        },
+        {
+            "name": "rizzo"
+        }
+    ]
+}
+```
+
+## 
