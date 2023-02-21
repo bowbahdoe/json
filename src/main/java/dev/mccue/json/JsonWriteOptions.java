@@ -3,16 +3,18 @@ package dev.mccue.json;
 import dev.mccue.json.internal.ValueCandidate;
 
 /**
+ * Options to use when writing Json.
+ *
  * @param escapeUnicode If true, non-ascii characters are escaped as \\uXXXX
  * @param escapeJavascriptSeparators If true (default) the Unicode characters U+2028 and U+2029 will
  *                                   be escaped as \\u2028 and \\u2029 even if :escape-unicode is
  *                                   false. (These two characters are valid in pure JSON but are not
  *                                   valid in JavaScript strings.).
  * @param escapeSlash If true (default) the slash / is escaped as \\/
+ * @param indentation How many spaces to indent after an object or array start.
  */
 @ValueCandidate
-public
-record JsonWriteOptions(
+public record JsonWriteOptions(
         boolean escapeUnicode,
         boolean escapeJavascriptSeparators,
         boolean escapeSlash,

@@ -33,12 +33,16 @@ public final class JsonReadException extends RuntimeException {
         return new JsonReadException("JSON error (unexpected character): " + c);
     }
     public static JsonReadException invalidEscapeCharacter(char c) {
-        return new JsonReadException("Invalid escaped char: " + c);
+        return new JsonReadException("JSON error (invalid escaped char): " + c);
     }
 
 
     public static JsonReadException unexpectedEOF() {
         return new JsonReadException("JSON error (end-of-file)");
+    }
+
+    public static JsonReadException extraData(char c) {
+        return new JsonReadException("JSON error (extra data): " + c);
     }
 
     public static JsonReadException unexpectedEOFInsideString() {
