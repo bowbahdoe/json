@@ -150,11 +150,11 @@ public class Main {
 }
 ```
 
-</details>
-
 ```
 {"name":"Bop Bop","age":1,"cute":true}
 ```
+
+</details>
 
 ### Write to a String with indentation
 
