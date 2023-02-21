@@ -17,7 +17,6 @@ Requires Java 17+.
     <groupId>dev.mccue</groupId>
     <artifactId>json</artifactId>
     <version>0.2.0</version>
-    <scope>provided</scope>
 </dependency>
 ```
 
@@ -43,50 +42,86 @@ The non-goals of this library are
 2. Support every extension to the JSON spec.
 3. Handle documents which cannot fit into memory.
 
-## Reading and Writing
+## Examples and Explanation
+
+## Data Model
 
 
-
-### Read from a String
+### Reading from a String
 
 ```java
+import dev.mccue.json.Json;
 
+public class Main {
+    public static void main(String[] args) {
+        Json parsed = Json.readString("""
+                {
+                    "name": "Bop Bop",
+                    "age": 1,
+                    "cute": true
+                }
+                """);
+
+        System.out.println(parsed);
+    }
+}
 ```
 
 ### Write to a String
 
-
-## Encoding and Decoding
-
-
-### Full Example
-
-```java 
-record Dog(
-        String name,
-        int age
-) {
-    static Dog fromJson(Json json) {
-        return new Dog(
-                JsonDecoder.field(json, "name", JsonDecoder::string),
-                JsonDecoder.field(json, "age", JsonDecoder::int_)
-        );
-    }
-}
+```java
+import dev.mccue.json.Json;
 
 public class Main {
     public static void main(String[] args) {
-        var jsonString = """
-            {
-                "name": "Bop Bop",
-                "age": 1
-            }
-            """;
+        Json bopBop = Json.objectBuilder()
+                .put("name", "Bop Bop")
+                .put("age", 1)
+                .put("cute", true)
+                .build();
+        
+        String written = Json.writeString(bopBop);
 
-        var json = Json.readString(jsonString);
-        var bopBop = Dog.fromJson(json);
-
-        System.out.println(bopBop);
+        System.out.println(written);
     }
 }
 ```
+
+```
+{"name":"Bop Bop","age":1,"cute":true}
+```
+
+### Write to a String with indentation
+
+```java
+import dev.mccue.json.Json;
+import dev.mccue.json.JsonWriteOptions;
+
+public class Main {
+    public static void main(String[] args) {
+        Json bopBop = Json.objectBuilder()
+                .put("name", "Bop Bop")
+                .put("age", 1)
+                .put("cute", true)
+                .build();
+        
+        String written = Json.writeString(
+                bopBop,
+                new JsonWriteOptions()
+                        .withIndentation(4)
+        );
+
+        System.out.println(written);
+    }
+}
+```
+
+```
+{
+    "name": "Bop Bop",
+    "age": 1,
+    "cute": true
+}
+```
+
+
