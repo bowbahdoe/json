@@ -47,6 +47,10 @@ The non-goals of this library are
 
 ## Reading and Writing
 
+<details>
+    <summary>Show</summary>
+
+
 ### Read from a String
 
 ```java
@@ -66,8 +70,12 @@ public class Main {
     }
 }
 ```
+</details>
 
 ### Read from a file
+
+<details>
+    <summary>Show</summary>
 
 ```java
 import dev.mccue.json.Json;
@@ -88,7 +96,12 @@ public class Main {
 }
 ```
 
+</details>
+
 ### Read multiple top level forms
+
+<details>
+    <summary>Show</summary>
 
 ```java
 import dev.mccue.json.Json;
@@ -112,7 +125,12 @@ public class Main {
 }
 ```
 
+</details>
+
 ### Write to a String
+
+<details>
+    <summary>Show</summary>
 
 ```java
 import dev.mccue.json.Json;
@@ -132,11 +150,16 @@ public class Main {
 }
 ```
 
+</details>
+
 ```
 {"name":"Bop Bop","age":1,"cute":true}
 ```
 
 ### Write to a String with indentation
+
+<details>
+    <summary>Show</summary>
 
 ```java
 import dev.mccue.json.Json;
@@ -169,7 +192,12 @@ public class Main {
 }
 ```
 
+</details>
+
 ### Write to a file
+
+<details>
+    <summary>Show</summary>
 
 ```java 
 import dev.mccue.json.Json;
@@ -195,9 +223,14 @@ public class Main {
 }
 ```
 
+</details>
+
 ## Encoding and Decoding
 
 ## Encode a basic object
+
+<details>
+    <summary>Show</summary>
 
 ```java
 import dev.mccue.json.Json;
@@ -234,7 +267,12 @@ public class Main {
 }
 ```
 
+</details>
+
 ## Encode nested objects
+
+<details>
+    <summary>Show</summary>
 
 ```java
 import dev.mccue.json.Json;
@@ -302,4 +340,5 @@ public class Main {
 }
 ```
 
-## 
+</details>
+
