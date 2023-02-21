@@ -4,7 +4,6 @@ package dev.mccue.json.internal;
 import dev.mccue.json.Json;
 import dev.mccue.json.JsonReadOptions;
 import dev.mccue.json.stream.JsonArrayHandler;
-import dev.mccue.json.stream.JsonEvent;
 import dev.mccue.json.JsonNumber;
 import dev.mccue.json.JsonReadException;
 import dev.mccue.json.stream.JsonStreamReadOptions;
@@ -12,12 +11,8 @@ import dev.mccue.json.stream.JsonValueHandler;
 
 import java.io.IOException;
 import java.io.PushbackReader;
-import java.io.StringReader;
-import java.io.UncheckedIOException;
 import java.math.BigDecimal;
 import java.math.BigInteger;
-import java.util.Iterator;
-import java.util.NoSuchElementException;
 
 public final class JsonReaderMethods {
     private JsonReaderMethods() {}
@@ -216,8 +211,12 @@ public final class JsonReaderMethods {
                             stage = Stage.EXP_SYMBOL;
                             continue;
                         }
-                        case 9, 10, 13, 32, ',', ']', '}', -1 -> {
+                        case 9, 10, 13, 32, ',', ']', '}' -> {
                             stream.unread(c);
+                            isDecimal = false;
+                            break loop;
+                        }
+                        case -1 -> {
                             isDecimal = false;
                             break loop;
                         }
@@ -237,8 +236,12 @@ public final class JsonReaderMethods {
                             stage = Stage.EXP_SYMBOL;
                             continue;
                         }
-                        case 9, 10, 13, 32, ',', ']', '}', -1 -> {
+                        case 9, 10, 13, 32, ',', ']', '}' -> {
                             stream.unread(c);
+                            isDecimal = false;
+                            break loop;
+                        }
+                        case -1 -> {
                             isDecimal = false;
                             break loop;
                         }
@@ -271,8 +274,12 @@ public final class JsonReaderMethods {
                             stage = Stage.EXP_SYMBOL;
                             continue;
                         }
-                        case 9, 10, 13, 32, ',', ']', '}', -1 -> {
+                        case 9, 10, 13, 32, ',', ']', '}' -> {
                             stream.unread(c);
+                            isDecimal = true;
+                            break loop;
+                        }
+                        case  -1 -> {
                             isDecimal = true;
                             break loop;
                         }
@@ -311,8 +318,12 @@ public final class JsonReaderMethods {
                         case '0', '1', '2', '3', '4', '5', '6', '7', '8', '9' -> {
                             buffer.append((char) c);
                         }
-                        case 9, 10, 13, 32, ',', ']', '}', -1 -> {
+                        case 9, 10, 13, 32, ',', ']', '}' -> {
                             stream.unread(c);
+                            isDecimal = true;
+                            break loop;
+                        }
+                        case -1 -> {
                             isDecimal = true;
                             break loop;
                         }
@@ -526,5 +537,16 @@ public final class JsonReaderMethods {
         else {
             return handler.result;
         }
+    }
+
+    public static Json readFullyConsume(PushbackReader stream, JsonReadOptions options) throws IOException {
+        var result = read(stream, options);
+        for (int c = stream.read(); c > 0; c = stream.read()) {
+            switch (c) {
+                case 9, 10, 13, 32 -> {}
+                default -> throw JsonReadException.extraData((char) c);
+            }
+        }
+        return result;
     }
 }

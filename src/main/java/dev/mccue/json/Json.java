@@ -11,7 +11,14 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 /**
- * Immutable tree representation of Json.
+ * <p>
+ *     Immutable tree representation of Json.
+ * </p>
+ *
+ * <p>
+ *     There are no shared methods between the various implementors, so this class just serves the purpose
+ *     of giving them a common supertype.
+ * </p>
  */
 public sealed interface Json
         extends Serializable, JsonEncodable, JsonWriteable
@@ -139,25 +146,47 @@ public sealed interface Json
         }
     }
 
+    /**
+     * Convenience method to create a new array builder.
+     *
+     * @return A new array builder.
+     */
     static JsonArray.Builder arrayBuilder() {
         return JsonArray.builder();
     }
 
-    static JsonArray.Builder arrayBuilder(Collection<? extends JsonEncodable> object) {
-        if (object instanceof JsonArray o) {
+    /**
+     * Convenience method to create a new array builder from a collection
+     * of {@link JsonEncodable} elements.
+     *
+     * @param elements A collection of elements which can be turned into {@link Json}.
+     * @return A new {@link JsonArray.Builder}.
+     */
+    static JsonArray.Builder arrayBuilder(Collection<? extends JsonEncodable> elements) {
+        if (elements instanceof JsonArray o) {
             return new ArrayBuilderImpl(new ArrayList<>(o));
         }
         else {
-            return new ArrayBuilderImpl(new ArrayList<>(object.stream()
+            return new ArrayBuilderImpl(new ArrayList<>(elements.stream()
                     .map(Json::of)
                     .toList()));
         }
     }
 
+    /**
+     * Convenience method for creating an empty array.
+     *
+     * @return An empty {@link JsonArray}.
+     */
     static JsonArray emptyArray() {
         return ArrayImpl.EMPTY;
     }
 
+    /**
+     * Convenience method for creating an empty object.
+     *
+     * @return An empty {@link JsonObject}.
+     */
     static JsonObject emptyObject() {
         return ObjectImpl.EMPTY;
     }
@@ -167,13 +196,14 @@ public sealed interface Json
         return this;
     }
 
+
     static Json readString(CharSequence jsonText) throws JsonReadException {
         return readString(jsonText, new JsonReadOptions());
     }
 
     static Json readString(CharSequence jsonText, JsonReadOptions options) throws JsonReadException {
         try {
-            return JsonReaderMethods.read(new PushbackReader(
+            return JsonReaderMethods.readFullyConsume(new PushbackReader(
                     new StringReader(jsonText.toString()), JsonReaderMethods.MINIMUM_PUSHBACK_BUFFER_SIZE
             ), options);
         } catch (IOException e) {
@@ -182,7 +212,7 @@ public sealed interface Json
     }
 
     static Json read(Reader reader, JsonReadOptions options) throws IOException, JsonReadException {
-        return JsonReaderMethods.read(
+        return JsonReaderMethods.readFullyConsume(
                 new PushbackReader(reader, JsonReaderMethods.MINIMUM_PUSHBACK_BUFFER_SIZE),
                 options
         );

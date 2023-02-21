@@ -25,6 +25,8 @@ import dev.mccue.json.stream.JsonWriteable;
  */
 public interface JsonEncodable extends JsonWriteable {
     /**
+     * Converts the object into Json.
+     *
      * @return A Json representation of the object.
      */
     Json toJson();

@@ -22,16 +22,6 @@ public final class StringImpl implements JsonString {
 
     public StringImpl(java.lang.String value) {
         this.value = Objects.requireNonNull(value, "Json.String value must be nonnull");
-
-        Function<String, String> escape = s -> {
-            var sb = new StringBuilder();
-            try {
-                JsonWriter.writeString(s, sb, new JsonWriter.OptionsWithIndentDepth(new JsonWriteOptions()));
-            } catch (IOException e) {
-                throw new UncheckedIOException(e);
-            }
-            return sb.toString();
-        };
     }
 
     @Override

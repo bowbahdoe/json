@@ -16,8 +16,24 @@ import java.util.function.Function;
  * @param <T> The type that being constructed from the Json.
  */
 public interface JsonDecoder<T> {
+    /**
+     * Interpret some {@link Json} as some type.
+     * @param json The json being decoded.
+     * @return An instance of the type decoded from the Json.
+     * @throws JsonDecodeException If the structure of Json does match the needed structure to make a T.
+     *                              Other kinds of exceptions may be thrown, but good citizens should try to
+     *                              use {@link JsonDecodeException}.
+     */
     T decode(Json json) throws JsonDecodeException;
 
+    /**
+     * Given a decoder which constructs some type of output,
+     * transforms the result of that decoder.
+     *
+     * @param f The function to use to transform the output of the decoder.
+     * @return A new decoder with its output being the result of applying the given function.
+     * @param <R> The new result type to expect from a run of the decoder.
+     */
     default <R> JsonDecoder<R> map(Function<? super T, ? extends R> f) {
         return value -> f.apply(this.decode(value));
     }

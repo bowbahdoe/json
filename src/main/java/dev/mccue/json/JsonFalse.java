@@ -10,7 +10,7 @@ import java.io.Serial;
 public final class JsonFalse implements JsonBoolean {
     @Serial
     private static final long serialVersionUID = 1L;
-    static final JsonFalse INSTANCE = new JsonFalse();
+    private static final JsonFalse INSTANCE = new JsonFalse();
 
     private JsonFalse() {}
 

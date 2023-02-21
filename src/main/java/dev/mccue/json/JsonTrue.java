@@ -8,7 +8,8 @@ import java.io.Serial;
 public final class JsonTrue implements JsonBoolean {
     @Serial
     private static final long serialVersionUID = 1L;
-    static final JsonTrue INSTANCE = new JsonTrue();
+
+    private static final JsonTrue INSTANCE = new JsonTrue();
 
     private JsonTrue() {}
 

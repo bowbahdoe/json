@@ -4,6 +4,7 @@ import org.junit.jupiter.api.Test;
 
 import java.io.StringReader;
 import java.math.BigInteger;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -270,5 +271,70 @@ public final class JsonParsingTest {
     public void testEscapeChar() {
         var o = Json.readString("\"\\" + "u0009\"");
         assertEquals(Json.of("\u0009"), o);
+    }
+
+    @Test
+    public void testExtraInputThrows() {
+        assertThrows(JsonReadException.class, () -> Json.readString("{} {}"));
+        assertThrows(JsonReadException.class, () -> Json.readString("{} a"));
+        assertThrows(JsonReadException.class, () -> Json.read(new StringReader("{} {}")));
+    }
+
+    @Test
+    public void testExtraWhitespaceIsFine() {
+        assertEquals(Json.emptyObject(), Json.readString(("{} " + (char) 9 + (char) 10) + (char) 13 + (char) 32));
+    }
+
+    @Test
+    public void testReadMultipleTopLevel() {
+        var reader = Json.reader(new StringReader("""
+                        {
+                            "abc": 123,
+                            "def": {
+                                "ghi": [
+                                    "jkl",
+                                    "mno"
+                                ]
+                            },
+                            "qrs": ["tuv"],
+                            "wx": {"y": "z"},
+                            "_": null,
+                            "__": [ true, false ]
+                        }
+                        
+                        []
+                        
+                        { "": [] }
+                        """));
+
+        var forms = reader.stream().toList();
+
+        assertEquals(
+                List.of(
+                        Json.objectBuilder()
+                                .put("abc", 123)
+                                .put("def", Json.objectBuilder()
+                                        .put("ghi", Json.arrayBuilder()
+                                                .add("jkl")
+                                                .add("mno")
+                                                .build()
+                                        )
+                                        .build())
+                                .put("qrs", Json.arrayBuilder()
+                                        .add("tuv")
+                                        .build())
+                                .put("wx", Json.objectBuilder()
+                                        .put("y", "z")
+                                        .build())
+                                .put("_", Json.ofNull())
+                                .put("__", Json.of(List.of(Json.ofTrue(), Json.ofFalse())))
+                                .build(),
+                        Json.emptyArray(),
+                        Json.objectBuilder()
+                                .put("", Json.emptyArray())
+                                .build()
+                ),
+                forms
+        );
     }
 }

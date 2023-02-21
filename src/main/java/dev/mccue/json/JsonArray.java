@@ -28,6 +28,7 @@ public sealed interface JsonArray extends Json, List<Json> permits ArrayImpl {
     static Builder builder(int initialCapacity) {
         return new ArrayBuilderImpl(initialCapacity);
     }
+
     sealed interface Builder extends JsonEncodable permits ArrayBuilderImpl {
         Builder add(Json value);
         Builder addAll(Collection<? extends JsonEncodable> value);
