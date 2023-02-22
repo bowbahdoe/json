@@ -525,6 +525,7 @@ public class Main {
 </details>
 
 ### Decode an object with optional fields.
+
 <details>
     <summary>Show</summary>
 
@@ -675,6 +676,53 @@ public class Main {
 ```
 
 </details>
+
+### Decode json with a fixed set of keys
+
+<details>
+    <summary>Show</summary>
+
+```java
+import dev.mccue.json.Json;
+import dev.mccue.json.JsonDecodeException;
+import dev.mccue.json.JsonDecoder;
+
+import java.util.HashSet;
+import java.util.Set;
+
+record Prison(String location) {
+    public static Prison fromJson(Json json) {
+        var object = JsonDecoder.object(json);
+        var expected = Set.of("location");
+        if (!expected.equals(object.keySet())) {
+            var extra = new HashSet<>(object.keySet());
+            extra.removeAll(expected);
+            throw JsonDecodeException.of("Extra Keys: " + extra, json);
+        }
+
+        return new Prison(
+                JsonDecoder.field(json, "location", JsonDecoder::string)
+        );
+    }
+}
+public class Main {
+    public static void main(String[] args) {
+        Json withExtraKeys = Json.readString(
+                """
+                        {
+                            "location": "Siberia",
+                            "escapeMethod": "tunnelling"
+                        }
+                        """
+        );
+
+        var prison = Prison.fromJson(withExtraKeys);
+    }
+}
+```
+
+</details>
+
 
 ### Decode json into bean
 
@@ -1025,4 +1073,29 @@ def main(): Unit = {
 }
 ```
 
+``` 
+{
+    "title": "Most wanted",
+    "muppets": [
+        {
+            "name": "kermit",
+            "scientist": false,
+            "lines": "I'm not Constantine!"
+        },
+        {
+            "name": "beaker",
+            "scientist": true,
+            "lines": null
+        },
+        {
+            "name": "bunsen",
+            "scientist": true,
+            "lines": "I don't mean to be a stickler"
+        }
+    ]
+}
+Movie(Most wanted,List(Muppet(kermit,false,Some(kermit)), Muppet(beaker,true,Some(beaker)), Muppet(bunsen,true,Some(bunsen))))
+Movie(Most wanted,List(Muppet(kermit,false,Some(I'm not Constantine!)), Muppet(beaker,true,None), Muppet(bunsen,true,Some(I don't mean to be a stickler))))
+false
+```
 </details>
