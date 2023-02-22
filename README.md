@@ -736,7 +736,11 @@ public class Main {
         var fozzie = new Fozzie();
         fozzie.setJoke(JsonDecoder.field(json, "joke", JsonDecoder::string));
         fozzie.setPunchline(JsonDecoder.field(json, "punchline", JsonDecoder::string));
-        fozzie.setHecklers(JsonDecoder.field(json, "hecklers", JsonDecoder.array(JsonDecoder::string)));
+        fozzie.setHecklers(JsonDecoder.field(
+                json, 
+                "hecklers", 
+                JsonDecoder.array(JsonDecoder::string)
+        ));
         return fozzie;
     }
 
@@ -815,6 +819,210 @@ public class Main {
 
 ```
 [Person[firstName=Great, lastName=Gonzo], Person[firstName=Jim, lastName=Henson]]
+```
+
+</details>
+
+### Encode and Decode with Kotlin 
+
+<details>
+    <summary>Show</summary>
+
+```kotlin
+import dev.mccue.json.Json
+import dev.mccue.json.JsonDecoder
+import dev.mccue.json.JsonEncodable
+import dev.mccue.json.JsonWriteOptions
+
+data class Muppet(
+   val name: String,
+   val scientist: Boolean,
+   val lines: String?
+) : JsonEncodable {
+   override fun toJson(): Json =
+      Json.objectBuilder()
+         .put("name", name)
+         .put("scientist", scientist)
+         .put("lines", lines)
+         .build()
+
+   companion object {
+      fun fromJson(json: Json): Muppet =
+         Muppet(
+            JsonDecoder.field(json, "name") { JsonDecoder.string(it) },
+            JsonDecoder.field(json, "scientist") { JsonDecoder.boolean_(it) },
+            JsonDecoder.nullableField(json,
+               "lines",
+               { JsonDecoder.string(it) },
+               null
+            )
+         )
+   }
+}
+
+
+
+data class Movie(
+   val title: String,
+   val muppets: List<Muppet>
+) : JsonEncodable {
+   override fun toJson(): Json {
+      return Json.objectBuilder()
+         .put("title", title)
+         .put("muppets", muppets)
+         .build()
+   }
+
+   companion object {
+      fun fromJson(json: Json): Movie =
+         Movie(
+            JsonDecoder.field(json, "title") { JsonDecoder.string(it) },
+            JsonDecoder.field(json, "muppets", JsonDecoder.array { Muppet.fromJson(it) })
+         )
+   }
+}
+
+
+fun main(args: Array<String>) {
+   val movie = Movie(
+      "Most wanted",
+      listOf(
+         Muppet(
+            "kermit",
+            false,
+            "I'm not Constantine!"
+         ),
+         Muppet(
+            "beaker",
+            true,
+            null
+         ),
+         Muppet(
+            "bunsen",
+            true,
+            "I don't mean to be a stickler"
+         )
+      )
+   )
+
+   println(Json.writeString(movie, JsonWriteOptions().withIndentation(4)))
+
+   val movieRoundTripped = Movie.fromJson(Json.readString(Json.writeString(movie)))
+
+   println(movieRoundTripped)
+   println(movie)
+   println(movie == movieRoundTripped)
+}
+```
+
+```
+{
+    "title": "Most wanted",
+    "muppets": [
+        {
+            "name": "kermit",
+            "scientist": false,
+            "lines": "I'm not Constantine!"
+        },
+        {
+            "name": "beaker",
+            "scientist": true,
+            "lines": null
+        },
+        {
+            "name": "bunsen",
+            "scientist": true,
+            "lines": "I don't mean to be a stickler"
+        }
+    ]
+}
+Movie(title=Most wanted, muppets=[Muppet(name=kermit, scientist=false, lines=I'm not Constantine!), Muppet(name=beaker, scientist=true, lines=null), Muppet(name=bunsen, scientist=true, lines=I don't mean to be a stickler)])
+Movie(title=Most wanted, muppets=[Muppet(name=kermit, scientist=false, lines=I'm not Constantine!), Muppet(name=beaker, scientist=true, lines=null), Muppet(name=bunsen, scientist=true, lines=I don't mean to be a stickler)])
+true
+```
+
+</details>
+
+### Encode and Decode with Scala 3
+
+<details>
+    <summary>Show</summary>
+
+```scala
+import dev.mccue.json.{Json, JsonDecoder, JsonEncodable, JsonWriteOptions}
+
+import scala.jdk.CollectionConverters._
+
+case class Muppet(name: String, scientist: Boolean, lines: Option[String]) extends JsonEncodable {
+  override def toJson: Json =
+    Json.objectBuilder()
+      .put("name", name)
+      .put("scientist", scientist)
+      .put("lines", lines.orNull)
+      .build
+}
+
+object Muppet {
+  def fromJson(json: Json): Muppet =
+    Muppet(
+      JsonDecoder.field(json, "name", JsonDecoder.string _),
+      JsonDecoder.field(json, "scientist", JsonDecoder.boolean_ _),
+      JsonDecoder.nullableField(json, "name", JsonDecoder.string _)
+        .map(Option(_))
+        .orElse(None)
+    )
+}
+
+case class Movie(title: String, muppets: Seq[Muppet]) extends JsonEncodable {
+  override def toJson: Json =
+    Json.objectBuilder()
+      .put("title", title)
+      .put("muppets", muppets.asJava)
+      .build()
+}
+
+object Movie {
+  def fromJson(json: Json): Movie =
+    Movie(
+      JsonDecoder.field(json, "title", JsonDecoder.string _),
+      JsonDecoder.field(json, "muppets", JsonDecoder.array(Muppet.fromJson _))
+        .asScala
+        .toSeq
+    )
+}
+
+
+@main
+def main(): Unit = {
+  val movie = Movie(
+    "Most wanted",
+    Seq(
+      Muppet(
+        "kermit",
+        false,
+        Some("I'm not Constantine!")
+      ),
+      Muppet(
+        "beaker",
+        true,
+        None
+      ),
+      Muppet(
+        "bunsen",
+        true,
+        Some("I don't mean to be a stickler")
+      )
+    )
+  )
+
+  println(Json.writeString(movie, JsonWriteOptions().withIndentation(4)))
+
+  val movieRoundTripped = Movie.fromJson(Json.readString(Json.writeString(movie)))
+
+  println(movieRoundTripped)
+  println(movie)
+  println(movie == movieRoundTripped)
+}
 ```
 
 </details>
