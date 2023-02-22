@@ -680,6 +680,9 @@ public class Main {
 
 ### Decode json into bean
 
+<details>
+    <summary>Show</summary>
+
 ⚠️ This example is just intended to show how you can use decoders to make objects
 that have different construction methods. Don't mindlessly add getters
 and setters to your classes!
@@ -754,3 +757,5 @@ public class Main {
     }
 }
 ```
+
+</details>
