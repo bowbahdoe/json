@@ -452,7 +452,7 @@ public final class JsonReaderMethods {
                     case ',':
                         continue;
                     case '}':
-                        objectHandler.objectEnd();
+                        objectHandler.onObjectEnd();
                         return;
                     default:
                         throw JsonReadException.missingEntryInObject();
@@ -463,7 +463,7 @@ public final class JsonReaderMethods {
                     throw JsonReadException.emptyEntryInObject();
                 }
                 else {
-                    objectHandler.objectEnd();
+                    objectHandler.onObjectEnd();
                     return;
                 }
             }
