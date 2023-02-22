@@ -44,6 +44,130 @@ The non-goals of this library are
 
 ## Examples
 
+### Create Json from a String
+
+<details>
+    <summary>Show</summary>
+
+```java
+import dev.mccue.json.Json;
+import dev.mccue.json.JsonObject;
+
+public class Main {
+   public static void main(String[] args) {
+      Json line = Json.of("rainbow connection");
+
+      System.out.println(line);
+   }
+}
+```
+</details>
+
+### Create Json from Numbers
+
+<details>
+    <summary>Show</summary>
+
+```java
+import dev.mccue.json.Json;
+
+import java.math.BigDecimal;
+import java.math.BigInteger;
+import java.util.List;
+
+public class Main {
+   public static void main(String[] args) {
+      List<Json> numbers = List.of(
+              Json.of(1),
+              Json.of(2L),
+              Json.of(3.5),
+              Json.of(new BigInteger("4")),
+              Json.of(new BigDecimal("5.5"))
+      );
+
+
+      System.out.println(numbers);
+   }
+}
+```
+</details>
+
+### Create a JsonObject
+
+<details>
+    <summary>Show</summary>
+
+```java
+import dev.mccue.json.Json;
+import dev.mccue.json.JsonObject;
+
+public class Main {
+   public static void main(String[] args) {
+      JsonObject swedishChef = Json.objectBuilder()
+              .put("name", "chef")
+              .put("nationality", "swedish")
+              .put("lines", 1)
+              .build();
+
+      System.out.println(swedishChef);
+   }
+}
+```
+</details>
+
+### Create a JsonArray
+
+<details>
+    <summary>Show</summary>
+
+```java
+import dev.mccue.json.Json;
+import dev.mccue.json.JsonArray;
+
+public class Main {
+   public static void main(String[] args) {
+      JsonArray lonelyNumbers = Json.arrayBuilder()
+              .add(1)
+              .add(2)
+              .build();
+
+      System.out.println(lonelyNumbers);
+   }
+}
+```
+</details>
+
+### Create a nested structure
+
+<details>
+    <summary>Show</summary>
+
+```java
+import dev.mccue.json.Json;
+import dev.mccue.json.JsonObject;
+
+public class Main {
+   public static void main(String[] args) {
+      JsonObject kermit = Json.objectBuilder()
+              .put("name", "kermit")
+              .put("wife", Json.objectBuilder()
+                      .put("name", "ms piggy"))
+              .put("children", Json.arrayBuilder()
+                      .add(Json.objectBuilder()
+                              .put("species", "frog")
+                              .put("gender", "male"))
+                      .add(Json.objectBuilder()
+                              .put("species", "pig")
+                              .put("gender", "female")))
+              .put("commitmentIssues", true)
+              .build();
+
+      System.out.println(kermit);
+   }
+}
+```
+</details>
+
 ### Read from a String
 
 <details>
@@ -290,7 +414,7 @@ record Muppet(String name)
 }
 
 record Movie(String title, List<Muppet> cast)
-        implements JsonEncodable{
+        implements JsonEncodable {
 
     @Override
     public Json toJson() {
@@ -499,3 +623,134 @@ public class Main {
 ```
 
 </details>
+
+### Decode an enum
+
+<details>
+    <summary>Show</summary>
+
+```java
+import dev.mccue.json.Json;
+import dev.mccue.json.JsonDecodeException;
+import dev.mccue.json.JsonDecoder;
+
+import java.util.Arrays;
+import java.util.List;
+
+enum Location {
+   CALIFORNIA,
+   RHODE_ISLAND,
+   SASKATCHEWAN,
+   NEW_YORK;
+
+   static Location fromJson(Json json) {
+      return switch (JsonDecoder.string(json)) {
+         case "CALIFORNIA" -> CALIFORNIA;
+         case "RHODE_ISLAND" -> RHODE_ISLAND;
+         case "SASKATCHEWAN" -> SASKATCHEWAN;
+         case "NEW_YORK" -> NEW_YORK;
+         default -> throw JsonDecodeException.of(
+                 "Expected one of " + Arrays.toString(values()),
+                 json
+         );
+      };
+   }
+}
+
+public class Main {
+   public static void main(String[] args) {
+      Json locationsJson = Json.readString("""
+              [
+                  "CALIFORNIA",
+                  "SASKATCHEWAN"
+              ]
+              """);
+
+      List<Location> locations = JsonDecoder.array(
+              locationsJson,
+              Location::fromJson
+      );
+
+      System.out.println(locations);
+   }
+}
+```
+
+</details>
+
+### Decode json into bean
+
+⚠️ This example is just intended to show how you can use decoders to make objects
+that have different construction methods. Don't mindlessly add getters
+and setters to your classes!
+```java
+import dev.mccue.json.Json;
+import dev.mccue.json.JsonDecoder;
+
+import java.util.List;
+
+class Fozzie {
+    private String joke;
+    private String punchline;
+    private List<String> hecklers;
+
+    public Fozzie() {}
+
+    public String getJoke() {
+        return joke;
+    }
+
+    public void setJoke(String joke) {
+        this.joke = joke;
+    }
+
+    public String getPunchline() {
+        return punchline;
+    }
+
+    public void setPunchline(String punchline) {
+        this.punchline = punchline;
+    }
+
+    public List<String> getHecklers() {
+        return hecklers;
+    }
+
+    public void setHecklers(List<String> hecklers) {
+        this.hecklers = hecklers;
+    }
+
+    @Override
+    public String toString() {
+        return "Fozzie[" +
+                "joke=" + joke +
+                ", punchline=" + punchline  +
+                ", hecklers=" + hecklers +
+                ']';
+    }
+}
+
+public class Main {
+    static Fozzie fozzieFromJson(Json json) {
+        var fozzie = new Fozzie();
+        fozzie.setJoke(JsonDecoder.field(json, "joke", JsonDecoder::string));
+        fozzie.setPunchline(JsonDecoder.field(json, "punchline", JsonDecoder::string));
+        fozzie.setHecklers(JsonDecoder.field(json, "hecklers", JsonDecoder.array(JsonDecoder::string)));
+        return fozzie;
+    }
+
+    public static void main(String[] args) {
+        Json fozzieJson = Json.readString("""
+                {
+                    "joke": "What do you get when you cross the Atlantic with the titanic?",
+                    "punchline": "Halfway! Wacka Wacka!",
+                    "hecklers": ["Statler", "Waldorf"]
+                }
+                """);
+
+        Fozzie fozzie = fozzieFromJson(fozzieJson);
+
+        System.out.println(fozzie);
+    }
+}
+```
