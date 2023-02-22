@@ -8,7 +8,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 @ValueCandidate
-public record ObjectBuilder(LinkedHashMap<java.lang.String, Json> values) implements JsonObject.Builder {
+public record ObjectBuilder(LinkedHashMap<String, Json> values) implements JsonObject.Builder {
     public ObjectBuilder() {
         this(new LinkedHashMap<>());
     }

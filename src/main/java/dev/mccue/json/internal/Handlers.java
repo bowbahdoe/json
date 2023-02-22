@@ -102,7 +102,7 @@ final class Handlers {
         }
 
         @Override
-        public void onString(java.lang.String value) {
+        public void onString(String value) {
             onValue.accept(JsonString.of(value));
         }
 

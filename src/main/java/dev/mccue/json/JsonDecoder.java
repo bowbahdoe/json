@@ -205,7 +205,7 @@ public interface JsonDecoder<T> {
                     throw JsonDecodeException.atIndex(i, JsonDecodeException.of(e, jsonItem));
                 }
             }
-            return List.copyOf(items);
+            return Collections.unmodifiableList(items);
         }
     }
 

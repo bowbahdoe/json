@@ -10,7 +10,7 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 
 public sealed interface JsonObject extends Json, Map<String, Json> permits ObjectImpl {
-    static JsonObject of(Map<java.lang.String, ? extends JsonEncodable> value) {
+    static JsonObject of(Map<String, ? extends JsonEncodable> value) {
         return new ObjectImpl(value
                 .entrySet()
                 .stream()
@@ -107,7 +107,7 @@ public sealed interface JsonObject extends Json, Map<String, Json> permits Objec
         }
 
         default Builder put(java.lang.String key, JsonEncodable value) {
-            return put(key, value.toJson());
+            return put(key, Json.of(value));
         }
 
         default Builder put(java.lang.String key, JsonObject value) {
