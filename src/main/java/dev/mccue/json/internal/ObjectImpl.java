@@ -21,13 +21,9 @@ public record ObjectImpl(
                 "Must be either deeply immutable or fully owned by this class.",
                 "Must be unmodifiable.",
         })
-        Map<java.lang.String, Json> value
+        Map<String, Json> value
 ) implements JsonObject {
     public static final JsonObject EMPTY = new ObjectImpl(Map.of());
-
-    public ObjectImpl(Map<java.lang.String, Json> value) {
-        this.value = value;
-    }
 
     @Override
     public int size() {

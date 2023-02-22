@@ -10,7 +10,7 @@ import java.io.Serial;
 public final class JsonNull implements Json {
     @Serial
     private static final long serialVersionUID = 1L;
-    static final JsonNull INSTANCE = new JsonNull();
+    private static final JsonNull INSTANCE = new JsonNull();
 
     private JsonNull() {}
 

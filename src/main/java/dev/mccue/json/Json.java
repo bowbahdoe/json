@@ -3,11 +3,13 @@ package dev.mccue.json;
 import dev.mccue.json.internal.*;
 import dev.mccue.json.stream.JsonStreamReadOptions;
 import dev.mccue.json.stream.JsonValueHandler;
-import dev.mccue.json.stream.JsonWriteable;
 
 import java.io.*;
 import java.math.BigDecimal;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
@@ -21,7 +23,7 @@ import java.util.stream.Collectors;
  * </p>
  */
 public sealed interface Json
-        extends Serializable, JsonEncodable, JsonWriteable
+        extends Serializable, JsonEncodable
         permits JsonBoolean, JsonNull, JsonString, JsonNumber, JsonArray, JsonObject {
     static Json of(JsonEncodable value) {
         if (value == null) {
