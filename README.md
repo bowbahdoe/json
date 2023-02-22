@@ -182,8 +182,7 @@ public class Main {
     public static void main(String[] args) {
         Json parsed = Json.readString("""
                 {
-                    "name": "Bop Bop",
-                    "age": 1,
+                    "name": "Tiny Tim",
                     "cute": true
                 }
                 """);
@@ -258,22 +257,22 @@ public class Main {
 import dev.mccue.json.Json;
 
 public class Main {
-    public static void main(String[] args) {
-        Json bopBop = Json.objectBuilder()
-                .put("name", "Bop Bop")
-                .put("age", 1)
-                .put("cute", true)
-                .build();
-        
-        String written = Json.writeString(bopBop);
+   public static void main(String[] args) {
+      Json beaker = Json.objectBuilder()
+              .put("name", "Beaker")
+              .put("milliliters", 5)
+              .put("scientist", true)
+              .build();
 
-        System.out.println(written);
-    }
+      String written = Json.writeString(beaker);
+
+      System.out.println(written);
+   }
 }
 ```
 
 ```
-{"name":"Bop Bop","age":1,"cute":true}
+{"name":"Beaker","milliliters":5,"scientist":true}
 ```
 
 </details>
@@ -289,14 +288,14 @@ import dev.mccue.json.JsonWriteOptions;
 
 public class Main {
     public static void main(String[] args) {
-        Json bopBop = Json.objectBuilder()
-                .put("name", "Bop Bop")
-                .put("age", 1)
-                .put("cute", true)
+        Json beaker = Json.objectBuilder()
+                .put("name", "Beaker")
+                .put("milliliters", 5)
+                .put("scientist", true)
                 .build();
         
         String written = Json.writeString(
-                bopBop,
+                beaker,
                 new JsonWriteOptions()
                         .withIndentation(4)
         );
@@ -308,9 +307,9 @@ public class Main {
 
 ```
 {
-    "name": "Bop Bop",
-    "age": 1,
-    "cute": true
+    "name": "Beaker",
+    "milliliters": 5,
+    "scientist": true
 }
 ```
 
@@ -330,16 +329,15 @@ import java.nio.file.Path;
 
 public class Main {
     public static void main(String[] args) throws IOException {
-        Json bopBop = Json.objectBuilder()
-                .put("name", "Bop Bop")
-                .put("age", 1)
-                .put("cute", true)
+        Json bunsen = Json.objectBuilder()
+                .put("name", "bunsen")
+                .put("scientist", true)
                 .build();
 
         try (var writer = Files.newBufferedWriter(
                 Path.of("out.json")
         )) {
-            Json.write(bopBop, writer);
+            Json.write(bunsen, writer);
         }
     }
 }
@@ -756,6 +754,67 @@ public class Main {
         System.out.println(fozzie);
     }
 }
+```
+
+</details>
+
+### Decode from multiple representations
+
+<details>
+    <summary>Show</summary>
+
+```java
+import dev.mccue.json.Json;
+import dev.mccue.json.JsonDecoder;
+
+import java.util.List;
+
+record Person(String firstName, String lastName) {
+    static Person fromJsonV1(Json json) {
+        var fullName = JsonDecoder.field(json, "name", JsonDecoder::string);
+        var split = fullName.split(" ", 2);
+        return new Person(split[0], split[1]);
+    }
+
+    static Person fromJsonV2(Json json) {
+        return new Person(
+                JsonDecoder.field(json, "first_name", JsonDecoder::string),
+                JsonDecoder.field(json, "last_name", JsonDecoder::string)
+        );
+    }
+
+    static Person fromJson(Json json) {
+        return JsonDecoder.oneOf(
+                json,
+                Person::fromJsonV2,
+                Person::fromJsonV1
+        );
+    }
+}
+
+public class Main {
+    public static void main(String[] args) {
+        Json peopleJson = Json.readString("""
+                [
+                    {
+                        "name": "Great Gonzo"
+                    },
+                    {
+                        "first_name": "Jim",
+                        "last_name": "Henson"
+                    }
+                ]
+                """);
+
+        List<Person> people = JsonDecoder.array(peopleJson, Person::fromJson);
+
+        System.out.println(people);
+    }
+}
+```
+
+```
+[Person[firstName=Great, lastName=Gonzo], Person[firstName=Jim, lastName=Henson]]
 ```
 
 </details>
