@@ -6,8 +6,7 @@ import java.util.*;
 import java.util.function.Function;
 
 /**
- * A Decoder is some code that knows how to transform Json into
- * some other type.
+ * An object that knows how to convert another kind of object can be converted to JSON.
  *
  * <p>
  *     It is preferred that when a decoder fails it throw a {@link JsonDecodeException}.

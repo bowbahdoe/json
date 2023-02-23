@@ -25,7 +25,7 @@ final class Handlers {
         }
 
         @Override
-        public void objectEnd() {
+        public void onObjectEnd() {
             onObject.accept(((ObjectBuilder) builder).buildInternal());
         }
     }

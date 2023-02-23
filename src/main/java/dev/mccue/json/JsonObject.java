@@ -9,6 +9,9 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
+/**
+ * Represents an object in the json data model.
+ */
 public sealed interface JsonObject extends Json, Map<String, Json> permits ObjectImpl {
     static JsonObject of(Map<String, ? extends JsonEncodable> value) {
         return new ObjectImpl(value

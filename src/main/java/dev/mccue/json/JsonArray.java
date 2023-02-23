@@ -10,6 +10,9 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
 
+/**
+ * Represents an array in the json data model.
+ */
 public sealed interface JsonArray extends Json, List<Json> permits ArrayImpl {
     static JsonArray of(Json... values) {
         return of(Arrays.asList(values));

@@ -6,6 +6,7 @@ import dev.mccue.json.stream.JsonValueHandler;
 
 import java.io.*;
 import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedHashMap;
@@ -14,17 +15,43 @@ import java.util.stream.Collectors;
 
 /**
  * <p>
- *     Immutable tree representation of Json.
+ *     Immutable tree representation of the json data model.
  * </p>
  *
  * <p>
- *     There are no shared methods between the various implementors, so this class just serves the purpose
- *     of giving them a common supertype.
+ *     The allowed implementors represent the different possible shapes Json can take.
+ * </p>
+ *
+ * <ul>
+ *     <li>{@link JsonObject} - A map of {@link String} to {@link Json}.</li>
+ *     <li>{@link JsonArray} - An array of {@link Json}.</li>
+ *     <li>{@link JsonString} - A string.</li>
+ *     <li>{@link JsonNumber} - A number.</li>
+ *     <li>{@link JsonTrue} - true.</li>
+ *     <li>{@link JsonFalse} - false.</li>
+ *     <li>{@link JsonNull} - null.</li>
+ * </ul>
+ *
+ * <p>
+ *     There are no shared methods between those implementors, so this class just serves the purpose
+ *     of giving them a common supertype and to be a place for associated static methods.
+ * </p>
+ *
+ * <p>
+ *     Unless otherwise specified, all factory methods in this interface are null-safe and will replace
+ *     any actual nulls with {@link JsonNull}.
  * </p>
  */
 public sealed interface Json
         extends Serializable, JsonEncodable
         permits JsonBoolean, JsonNull, JsonString, JsonNumber, JsonArray, JsonObject {
+    /**
+     * Creates {@link Json} from something which implements {@link JsonEncodable},
+     * including {@link Json} itself.
+     *
+     * @param value The value to be encoded.
+     * @return An instance of {@link Json}.
+     */
     static Json of(JsonEncodable value) {
         if (value == null) {
             return JsonNull.instance();
@@ -40,86 +67,190 @@ public sealed interface Json
         }
     }
 
+    /**
+     * Creates {@link Json} from a {@link BigDecimal}.
+     *
+     * @param value The value to be encoded.
+     * @return An instance of {@link Json}.
+     */
     static Json of(BigDecimal value) {
         return value == null ? JsonNull.instance() : new BigDecimalImpl(value);
     }
 
+    /**
+     * Creates {@link Json} from a double.
+     *
+     * @param value The value to be encoded.
+     * @return An instance of {@link Json}.
+     */
     static Json of(double value) {
         return new DoubleImpl(value);
     }
 
+    /**
+     * Creates {@link Json} from a long.
+     *
+     * @param value The value to be encoded.
+     * @return An instance of {@link Json}.
+     */
     static Json of(long value) {
         return new LongImpl(value);
     }
 
+    /**
+     * Creates {@link Json} from a float.
+     *
+     * @param value The value to be encoded.
+     * @return An instance of {@link Json}.
+     */
     static Json of(float value) {
         return new DoubleImpl(value);
     }
 
+    /**
+     * Creates {@link Json} from an int.
+     *
+     * @param value The value to be encoded.
+     * @return An instance of {@link Json}.
+     */
     static Json of(int value) {
         return new LongImpl(value);
     }
 
-    static Json of(java.lang.Double value) {
+    /**
+     * Creates {@link Json} from a {@link Double}.
+     *
+     * @param value The value to be encoded.
+     * @return An instance of {@link Json}.
+     */
+    static Json of(Double value) {
         return value == null ? JsonNull.instance() : new DoubleImpl(value);
     }
 
-    static Json of(java.lang.Long value) {
+    /**
+     * Creates {@link Json} from a {@link Long}.
+     *
+     * @param value The value to be encoded.
+     * @return An instance of {@link Json}.
+     */
+    static Json of(Long value) {
         return value == null ? JsonNull.instance() : new LongImpl(value);
     }
 
+    /**
+     * Creates {@link Json} from a {@link Float}.
+     *
+     * @param value The value to be encoded.
+     * @return An instance of {@link Json}.
+     */
     static Json of(Float value) {
         return value == null ? JsonNull.instance() : new DoubleImpl(value);
     }
 
+    /**
+     * Creates {@link Json} from an {@link Integer}.
+     *
+     * @param value The value to be encoded.
+     * @return An instance of {@link Json}.
+     */
     static Json of(Integer value) {
         return value == null ? JsonNull.instance() : new LongImpl(value);
     }
 
-    static Json of(java.math.BigInteger value) {
+    /**
+     * Creates {@link Json} from a {@link BigInteger}.
+     *
+     * @param value The value to be encoded.
+     * @return An instance of {@link Json}.
+     */
+    static Json of(BigInteger value) {
         return value == null ? JsonNull.instance() : new BigIntegerImpl(value);
     }
 
-    static Json of(java.lang.String value) {
+    /**
+     * Creates {@link Json} from a {@link String}.
+     *
+     * @param value The value to be encoded.
+     * @return An instance of {@link Json}.
+     */
+    static Json of(String value) {
         return value == null ? JsonNull.instance() : new StringImpl(value);
     }
 
+    /**
+     * Creates {@link Json} representing null.
+     * @return {@link Json} representing null.
+     */
     static Json ofNull() {
         return JsonNull.instance();
     }
 
+    /**
+     * Creates {@link Json} representing true.
+     * @return {@link Json} representing true.
+     */
     static Json ofTrue() {
         return JsonBoolean.of(true);
     }
 
+    /**
+     * Creates a {@link Json} representing false.
+     * @return {@link Json} representing false.
+     */
     static Json ofFalse() {
         return JsonBoolean.of(false);
     }
 
 
-    static Json of(boolean b) {
-        return JsonBoolean.of(b);
+    /**
+     * Creates {@link Json} from a boolean.
+     *
+     * @param value The value to be encoded.
+     * @return An instance of {@link Json}.
+     */
+    static Json of(boolean value) {
+        return JsonBoolean.of(value);
     }
 
-    static Json of(java.lang.Boolean b) {
-        return b == null ? JsonNull.instance() : JsonBoolean.of(b);
+    /**
+     * Creates {@link Json} from a {@link Boolean}.
+     *
+     * @param value The value to be encoded.
+     * @return An instance of {@link Json}.
+     */
+    static Json of(Boolean value) {
+        return value == null ? JsonNull.instance() : JsonBoolean.of(value);
     }
 
-    static Json of(Collection<? extends JsonEncodable> jsonList) {
-        return jsonList == null
+    /**
+     * Creates {@link Json} from a {@link Collection} of items which
+     * implement {@link JsonEncodable}.
+     *
+     * @param value The value to be encoded.
+     * @return An instance of {@link Json}.
+     */
+    static Json of(Collection<? extends JsonEncodable> value) {
+        return value == null
                 ? JsonNull.instance()
                 : new ArrayImpl(
-                        jsonList.stream()
+                        value.stream()
                                 .map(json -> json == null ? JsonNull.instance() : json.toJson())
                                 .toList()
                 );
     }
 
-    static Json of(Map<java.lang.String, ? extends JsonEncodable> jsonMap) {
-        return jsonMap == null
+    /**
+     * Creates {@link Json} from a {@link Map} with {@link String} keys to values which
+     * implement {@link JsonEncodable}.
+     *
+     * @param value The value to be encoded.
+     * @return An instance of {@link Json}.
+     */
+    static Json of(Map<String, ? extends JsonEncodable> value) {
+        return value == null
                 ? JsonNull.instance()
                 : new ObjectImpl(
-                        jsonMap
+                        value
                                 .entrySet()
                                 .stream()
                                 .collect(Collectors.toUnmodifiableMap(
@@ -131,17 +262,29 @@ public sealed interface Json
                 );
     }
 
+    /**
+     * Creates a new {@link JsonObject.Builder}.
+     *
+     * @return A new {@link JsonObject.Builder}.
+     */
     static JsonObject.Builder objectBuilder() {
         return JsonObject.builder();
     }
 
-    static JsonObject.Builder objectBuilder(Map<java.lang.String, ? extends JsonEncodable> object) {
-        if (object instanceof JsonObject o) {
+    /**
+     * Creates a new {@link JsonObject.Builder} pre-filled with elements from a {@link Map}
+     * with {@link String} keys and values which implement {@link JsonEncodable}.
+     *
+     * @param value The value to pre-fill the builder with.
+     * @return A new {@link JsonObject.Builder}.
+     */
+    static JsonObject.Builder objectBuilder(Map<String, ? extends JsonEncodable> value) {
+        if (value instanceof JsonObject o) {
             return new ObjectBuilder(new LinkedHashMap<>(o));
         }
         else {
             var objectEntries = new LinkedHashMap<String, Json>();
-            for (var entry : object.entrySet()) {
+            for (var entry : value.entrySet()) {
                 objectEntries.put(entry.getKey(), Json.of(entry.getValue()));
             }
             return new ObjectBuilder(objectEntries);
@@ -193,12 +336,30 @@ public sealed interface Json
         return ObjectImpl.EMPTY;
     }
 
+    /**
+     * Vacuous implementation to make methods like {@link Json#of(java.util.Collection)}
+     * and {@link Json#of(java.util.Map)} convenient to create.
+     *
+     * @return Itself.
+     */
     @Override
     default Json toJson() {
         return this;
     }
 
 
+    /**
+     * Reads the given text as {@link Json}
+     *
+     * <p>
+     *     Only expects to read a single form. Will throw if there is non-whitespace content
+     *     at the end.
+     * </p>
+     *
+     * @param jsonText The text to read.
+     * @return {@link Json}
+     * @throws JsonReadException If the input {@link Json} is malformed.
+     */
     static Json readString(CharSequence jsonText) throws JsonReadException {
         return readString(jsonText, new JsonReadOptions());
     }
