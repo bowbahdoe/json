@@ -5,5 +5,9 @@ package dev.mccue.json.stream;
  * fashion to a JsonGenerator.
  */
 public interface JsonWriteable {
+    /**
+     * Writes this object to the given generator.
+     * @param generator The generator to write to.
+     */
     void write(JsonGenerator generator);
 }

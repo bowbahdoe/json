@@ -1,6 +1,5 @@
 package dev.mccue.json.stream;
 
-import dev.mccue.json.Json;
 import dev.mccue.json.JsonNumber;
 
 public interface JsonValueHandler {

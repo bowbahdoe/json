@@ -6,6 +6,9 @@ import dev.mccue.json.stream.JsonGenerator;
 
 import java.io.Serial;
 
+/**
+ * Represents null in the json data model.
+ */
 @ValueCandidate
 public final class JsonNull implements Json {
     @Serial
@@ -14,6 +17,12 @@ public final class JsonNull implements Json {
 
     private JsonNull() {}
 
+    /**
+     * Returns an instance of {@link JsonNull}. Guaranteed to be comparable with ==,
+     * but not to be safe for identity sensitive operations.
+     *
+     * @return An instance of {@link JsonNull}
+     */
     public static JsonNull instance() {
         return INSTANCE;
     }

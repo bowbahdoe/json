@@ -9,6 +9,9 @@ import dev.mccue.json.stream.JsonGenerator;
 import java.io.Serial;
 import java.math.BigDecimal;
 
+/**
+ * Represents a number in the json data model.
+ */
 public sealed abstract class JsonNumber
         extends Number
         implements Json

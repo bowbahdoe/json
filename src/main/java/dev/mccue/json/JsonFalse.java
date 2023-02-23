@@ -6,6 +6,9 @@ import dev.mccue.json.stream.JsonGenerator;
 
 import java.io.Serial;
 
+/**
+ * Represents false in the json data model.
+ */
 @ValueCandidate
 public final class JsonFalse implements JsonBoolean {
     @Serial
@@ -14,10 +17,21 @@ public final class JsonFalse implements JsonBoolean {
 
     private JsonFalse() {}
 
+    /**
+     * Returns an instance of {@link JsonFalse}. Guaranteed to be comparable with ==,
+     * but not to be safe for identity sensitive operations.
+     *
+     * @return An instance of {@link JsonFalse}
+     */
     public static JsonFalse instance() {
         return JsonFalse.INSTANCE;
     }
 
+    /**
+     * Returns false.
+     *
+     * @return false.
+     */
     @Override
     public boolean value() {
         return false;
