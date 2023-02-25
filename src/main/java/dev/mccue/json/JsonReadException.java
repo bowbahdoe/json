@@ -13,6 +13,10 @@ public final class JsonReadException extends RuntimeException {
         super(message);
     }
 
+    private JsonReadException(String message, Throwable t) {
+        super(message, t);
+    }
+
     public static JsonReadException invalidToken() {
         throw new JsonReadException();
     }
@@ -41,10 +45,6 @@ public final class JsonReadException extends RuntimeException {
         return new JsonReadException("JSON error (end-of-file)");
     }
 
-    public static JsonReadException extraData(char c) {
-        return new JsonReadException("JSON error (extra data): " + c);
-    }
-
     public static JsonReadException unexpectedEOFInsideString() {
         return new JsonReadException("JSON error (end-of-file inside string)");
     }
@@ -55,6 +55,10 @@ public final class JsonReadException extends RuntimeException {
 
     public static JsonReadException unexpectedEOFInsideUnicodeCharacterEscape() {
         return new JsonReadException("JSON error (end-of-file inside Unicode character escape)");
+    }
+
+    public static JsonReadException invalidUnicodeCharacterEscape(NumberFormatException e) {
+        return new JsonReadException("Json error (invalid Unicode character escape)", e);
     }
 
     public static JsonReadException invalidArray() {

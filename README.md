@@ -630,10 +630,8 @@ public class Main {
 
 ```java
 import dev.mccue.json.Json;
-import dev.mccue.json.JsonDecodeException;
 import dev.mccue.json.JsonDecoder;
 
-import java.util.Arrays;
 import java.util.List;
 
 enum Location {
@@ -643,16 +641,7 @@ enum Location {
    NEW_YORK;
 
    static Location fromJson(Json json) {
-      return switch (JsonDecoder.string(json)) {
-         case "CALIFORNIA" -> CALIFORNIA;
-         case "RHODE_ISLAND" -> RHODE_ISLAND;
-         case "SASKATCHEWAN" -> SASKATCHEWAN;
-         case "NEW_YORK" -> NEW_YORK;
-         default -> throw JsonDecodeException.of(
-                 "Expected one of " + Arrays.toString(values()),
-                 json
-         );
-      };
+      return Location.valueOf(JsonDecoder.string(json));
    }
 }
 
@@ -1126,8 +1115,6 @@ data class Muppet(
          )
    }
 }
-
-
 
 data class Movie(
    val title: String,
