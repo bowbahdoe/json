@@ -35,7 +35,12 @@ public final class JsonReaderMethods {
 
         var s = String.valueOf(new char[] { (char) a, (char) b, (char) c, (char) d });;
 
-        return (char) Integer.parseInt(s, 16);
+        try {
+            return (char) Integer.parseInt(s, 16);
+        } catch (NumberFormatException e) {
+            throw JsonReadException.invalidUnicodeCharacterEscape(e);
+        }
+
     }
 
     private static char readEscapedChar(PushbackReader stream) throws IOException {
@@ -544,7 +549,7 @@ public final class JsonReaderMethods {
         for (int c = stream.read(); c > 0; c = stream.read()) {
             switch (c) {
                 case 9, 10, 13, 32 -> {}
-                default -> throw JsonReadException.extraData((char) c);
+                default -> throw JsonReadException.nonWhitespaceTrailingContents((char) c);
             }
         }
         return result;
