@@ -1305,3 +1305,66 @@ Movie(Most wanted,List(Muppet(kermit,false,Some(I'm not Constantine!)), Muppet(b
 false
 ```
 </details>
+
+### Decode into sealed trait with Scala 3
+
+<details>
+    <summary>Show</summary>
+
+```scala
+import dev.mccue.json.{Json, JsonDecodeException, JsonDecoder, JsonEncodable, JsonWriteOptions}
+
+import scala.jdk.CollectionConverters.*
+
+sealed trait MessageBody {
+  def messageId: Int
+}
+
+object MessageBody {
+  def fromJson(json: Json): MessageBody = {
+    val id = JsonDecoder.field(json, "type", JsonDecoder.string _)
+    id match
+      case "init" =>
+        Init(
+          JsonDecoder.field(json, "msg_id", JsonDecoder.int_ _),
+          JsonDecoder.field(json, "node_id", JsonDecoder.string _),
+          JsonDecoder.field(json, "node_ids", JsonDecoder.array(JsonDecoder.string _))
+            .asScala
+            .toSeq
+        )
+      case "init_ok" =>
+        InitOk(
+          JsonDecoder.field(json, "msg_id", JsonDecoder.int_ _),
+          JsonDecoder.field(json, "in_reply_to", JsonDecoder.int_ _)
+        )
+      case _ =>
+        throw JsonDecodeException.atField("type", JsonDecodeException.of(
+          "expected one of \"init\", \"init_ok\"",
+          json
+        ))
+  }
+}
+
+case class Init(messageId: Int, nodeId: String, nodeIds: Seq[String]) extends MessageBody {}
+case class InitOk(messageId: Int, inReplyTo: Int) extends MessageBody {}
+
+case class Envelope(src: Option[String], dest: Option[String], body: MessageBody) {}
+
+object Envelope {
+  def fromJson(json: Json): Envelope = {
+    Envelope(
+      JsonDecoder.optionalField(json, "src", JsonDecoder.string _)
+        .map(Option(_))
+        .orElse(None),
+
+      JsonDecoder.optionalField(json, "dest", JsonDecoder.string _)
+        .map(Option(_))
+        .orElse(None),
+
+      JsonDecoder.field(json, "body", MessageBody.fromJson _)
+    )
+  }
+}
+```
+
+</details>

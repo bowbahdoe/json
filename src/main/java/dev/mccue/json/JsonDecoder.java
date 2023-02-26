@@ -14,6 +14,7 @@ import java.util.function.Function;
  *
  * @param <T> The type that being constructed from the Json.
  */
+@FunctionalInterface
 public interface JsonDecoder<T> {
     /**
      * Interpret some {@link Json} as some type.
