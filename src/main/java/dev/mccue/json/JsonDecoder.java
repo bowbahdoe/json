@@ -172,6 +172,17 @@ public interface JsonDecoder<T> {
         }
     }
 
+    static <T> T null_(Json json, T value) throws JsonDecodeException {
+        if (!(json instanceof JsonNull)) {
+            throw JsonDecodeException.of(
+                    "expected null",
+                    json
+            );
+        } else {
+            return value;
+        }
+    }
+
     static <T> JsonDecoder<List<T>> array(JsonDecoder<? extends T> itemDecoder) throws JsonDecodeException {
         return json -> array(json, itemDecoder);
     }
@@ -420,7 +431,7 @@ public interface JsonDecoder<T> {
         return json -> JsonDecoder.oneOf(
                 json,
                 decoder,
-                __ -> defaultValue
+                JsonDecoder.of(JsonDecoder::null_).map(__ -> defaultValue)
         );
     }
 

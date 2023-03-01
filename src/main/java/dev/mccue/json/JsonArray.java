@@ -8,7 +8,6 @@ import java.math.BigDecimal;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
-import java.util.Objects;
 
 /**
  * Represents an array in the json data model.
@@ -19,8 +18,6 @@ public sealed interface JsonArray extends Json, List<Json> permits ArrayImpl {
     }
 
     static JsonArray of(List<Json> value) {
-        Objects.requireNonNull(value, "Json.Array value must be nonnull");
-        value.forEach(json -> Objects.requireNonNull(json, "Each value in a Json.Array must be nonnull"));
         return new ArrayImpl(List.copyOf(value));
     }
 
