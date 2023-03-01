@@ -78,4 +78,19 @@ public class JsonTest {
     public void testOfString() {
         assertEquals(Json.of("abc"), JsonString.of("abc"));
     }
+
+    @Test
+    public void testTrueRepr() {
+        assertEquals("true", JsonTrue.instance().toString());
+    }
+
+    @Test
+    public void testFalseRepr() {
+        assertEquals("false", JsonFalse.instance().toString());
+    }
+
+    @Test
+    public void testNullRepr() {
+        assertEquals("null", JsonNull.instance().toString());
+    }
 }

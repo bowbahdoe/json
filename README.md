@@ -16,7 +16,7 @@ Requires Java 17+.
 <dependency>
     <groupId>dev.mccue</groupId>
     <artifactId>json</artifactId>
-    <version>0.2.1</version>
+    <version>0.2.2</version>
 </dependency>
 ```
 
@@ -24,7 +24,7 @@ Requires Java 17+.
 
 ```
 dependencies {
-    implementation("dev.mccue:json:0.2.1")
+    implementation("dev.mccue:json:0.2.2")
 }
 ```
 
@@ -41,6 +41,779 @@ The non-goals of this library are
 1. Provide an API for data-binding.
 2. Support every extension to the JSON spec.
 3. Handle documents which cannot fit into memory.
+
+## Tutorial
+
+<details>
+    <summary>Show</summary>
+
+### The Data Model
+
+JSON is a data format. It looks like the following sample.
+
+```json
+{
+    "name": "kermit",
+    "wife": null,
+    "girlfriend": "Ms. Piggy",
+    "age": 22,
+    "children": [
+        {
+            "species": "frog",
+            "gender": "male"
+        },
+        {
+            "species": "pig",
+            "gender": "female"
+        }
+    ],
+    "commitmentIssues": true
+}
+```
+
+In JSON you represent data using a combination of objects (maps from strings to JSON),
+arrays (ordered sequences of JSON), strings, numbers, true, false, and null.
+
+Therefore, one "natural" way to think about the data stored in a JSON document
+is as the union of those possibilities.
+
+```
+JSON is one of
+- a map of string to JSON
+- a list of JSON
+- a string
+- a number
+- true
+- false
+- null
+```
+
+The way to represent this in Java is using a sealed interface, which
+provides an explicit list of types which are allowed to implement it.
+
+```java 
+public sealed interface Json
+        permits 
+            JsonObject,
+            JsonArray,
+            JsonString,
+            JsonNumber,
+            JsonBoolean,
+            JsonNull {
+}
+```
+
+This means that if you have a field or variable which has the type `Json`, you know
+that it is either a `JsonObject`, `JsonArray`, `JsonString`, `JsonNumber`, `JsonBoolean`,
+or `JsonNull`.
+
+That is the first thing provided by my library. There is a `Json` type
+and subtypes representing those different cases.
+
+```java
+import dev.mccue.json.*;
+
+public class Main {
+    static Json greeting() {
+        return JsonString.of("hello");
+    }
+    
+    public static void main(String[] args) {
+        Json json = greeting();
+        switch (json) {
+            case JsonObject object ->
+                    System.out.println("An object");
+            case JsonArray array ->
+                    System.out.println("An array");
+            case JsonString str ->
+                    System.out.println("A string");
+            case JsonNumber number ->
+                    System.out.println("A number");
+            case JsonBoolean bool ->
+                    System.out.println("A boolean");
+            case JsonNull __ ->
+                    System.out.println("A json null");
+        }
+    }
+}
+```
+
+You can create instances
+of these subtypes using factory methods on the types themselves.
+
+```java
+import dev.mccue.json.*;
+
+import java.util.List;
+import java.util.Map;
+
+public class Main {
+    public static void main(String[] args) {
+        JsonObject kermit = JsonObject.of(Map.of(
+                "name", JsonString.of("kermit"),
+                "age", JsonNumber.of(22),
+                "commitmentIssues", JsonBoolean.of(true),
+                "wife", JsonNull.instance(),
+                "children", JsonArray.of(List.of(
+                        JsonString.of("Tiny Tim")
+                ))
+        ));
+
+        System.out.println(kermit);
+    }
+}
+```
+
+Or by using factory methods on `Json`, which aren't guaranteed to give you
+any specific subtype but in exchange will handle converting any stray `null`s to `JsonNull`.
+
+```java
+import dev.mccue.json.*;
+
+import java.util.List;
+import java.util.Map;
+
+public class Main {
+    public static void main(String[] args) {
+        Json kermit = Json.of(Map.of(
+                "name", Json.of("kermit"),
+                "age", Json.of(22),
+                "commitmentIssues", Json.of(true),
+                "wife", Json.ofNull(),
+                "children", Json.of(List.of(
+                        JsonString.of("Tiny Tim")
+                ))
+        ));
+
+        System.out.println(kermit);
+    }
+}
+```
+
+For `JsonObject` and `JsonArray`, there also use builders available which
+can make it so that you don't need to write `Json.of` on every value.
+
+```java
+import dev.mccue.json.Json;
+
+public class Main {
+    public static void main(String[] args) {
+        Json kermit = Json.objectBuilder()
+                .put("name", "kermit")
+                .put("age", 22)
+                .putTrue("commitmentIssues")
+                .putNull("wife")
+                .put("children", Json.arrayBuilder()
+                        .add("Tiny Tim"))
+                .build();
+
+        System.out.println(kermit);
+    }
+}
+```
+
+### Writing
+
+Once you have some `Json` you can write it out to a `String` using `Json.writeString`
+
+```java
+import dev.mccue.json.Json;
+
+public class Main {
+    public static void main(String[] args) {
+        Json songJson = Json.objectBuilder()
+                .put("title", "Rainbow Connection")
+                .put("year", 1979)
+                .build();
+
+        String song = Json.writeString(songJson);
+        System.out.println(song);
+    }
+}
+```
+
+```json
+{"title":"Rainbow Connection","year":1979}
+```
+
+If output is meant to be consumed by humans then whitespace can be added
+using a customized instance of `JsonWriteOptions`.
+
+```java
+import dev.mccue.json.Json;
+import dev.mccue.json.JsonWriteOptions;
+
+public class Main {
+    public static void main(String[] args) {
+        Json songJson = Json.objectBuilder()
+                .put("title", "Rainbow Connection")
+                .put("year", 1979)
+                .build();
+
+        String song = Json.writeString(
+                songJson,
+                new JsonWriteOptions()
+                        .withIndentation(4)
+        );
+        
+        System.out.println(song);
+    }
+}
+```
+
+```json
+{
+    "title": "Rainbow Connection",
+    "year": 1979
+}
+```
+
+If you want to write JSON to something other than a `String`, you need to
+obtain a `Writer` and use `Json.write`.
+
+```java
+import dev.mccue.json.Json;
+
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+
+public class Main {
+    public static void main(String[] args) throws IOException {
+        Json songJson = Json.objectBuilder()
+                .put("title", "Rainbow Connection")
+                .put("year", 1979)
+                .build();
+
+
+        try (var fileWriter = Files.newBufferedWriter(
+                Path.of("song.json"))
+        ) {
+            Json.write(songJson, fileWriter);
+        }
+    }
+}
+```
+
+### Encoding
+
+To turn a class you have defined into JSON, you just need to make a method
+which creates an instance of `Json` from the data stored in your class.
+
+```java
+import dev.mccue.json.Json;
+
+record Muppet(String name) {
+    Json toJson() {
+        return Json.objectBuilder()
+                .put("name", name)
+                .build();
+    }
+}
+
+public class Main {
+    public static void main(String[] args) {
+        var beaker = new Muppet("beaker");
+        Json beakerJson = beaker.toJson();
+
+        System.out.println(Json.writeString(beakerJson));
+    }
+}
+```
+
+This process is "encoding." You "encode" your data into JSON and then "write"
+that JSON to some output.
+
+For classes that you did not define, the logic for the conversion just needs to live somewhere.
+Dealer's choice where, but static methods are generally a good call.
+
+```java
+import dev.mccue.json.Json;
+
+import java.time.Month;
+import java.time.MonthDay;
+import java.time.format.DateTimeFormatter;
+
+final class TimeEncoders {
+    private TimeEncoders() {}
+
+    static Json monthDayToJson(MonthDay monthDay) {
+        return Json.of(
+                DateTimeFormatter.ofPattern("MM-dd")
+                        .format(monthDay)
+        );
+    }
+}
+
+record Muppet(String name, MonthDay birthday) {
+    Json toJson() {
+        return Json.objectBuilder()
+                .put("name", name)
+                .put(
+                        "birthday", 
+                        TimeEncoders.monthDayToJson(birthday)
+                )
+                .build();
+    }
+}
+
+public class Main {
+    public static void main(String[] args) {
+        var elmo = new Muppet(
+                "Elmo",
+                MonthDay.of(Month.FEBRUARY, 3)
+        );
+        Json elmoJson = elmo.toJson();
+
+        System.out.println(Json.writeString(elmoJson));
+    }
+}
+```
+
+```json
+{"name":"Elmo","birthday":"02-03"}
+```
+
+If a class you define has a JSON representation that could be considered "canonical", the interface `JsonEncodable`
+can be implemented. This will let you pass an instance of the class directly to `Json.writeString` or `Json.write`.
+
+```java
+import dev.mccue.json.Json;
+import dev.mccue.json.JsonEncodable;
+
+record Muppet(String name, boolean great)
+        implements JsonEncodable {
+    @Override
+    public Json toJson() {
+        return Json.objectBuilder()
+                .put("name", name)
+                .put("great", great)
+                .build();
+    }
+}
+
+public class Main {
+    public static void main(String[] args) {
+        var gonzo = new Muppet("Gonzo", true);
+        System.out.println(Json.writeString(gonzo));
+    }
+}
+```
+
+### Reading
+
+The inverse of writing JSON is reading it.
+
+If you have some JSON stored in a `String` you can
+read it into `Json` using `Json.readString`.
+
+```java
+import dev.mccue.json.Json;
+
+public class Main {
+    public static void main(String[] args) {
+        Json movie = Json.readString("""
+                {
+                    "title": "Treasure Island",
+                    "cast": [
+                        {
+                            "name": "Kermit",
+                            "role": "The Captain",
+                            "muppet": true
+                        },
+                        {
+                            "name": "Tim Curry",
+                            "role": "Long John Silver",
+                            "muppet": false
+                        }
+                    ]
+                
+                }
+                """);
+
+        System.out.println(movie);
+    }
+}
+```
+
+If that JSON is coming from another source, you need to obtain a `Reader` and use `Json.read`.
+
+```java
+import dev.mccue.json.Json;
+
+import java.io.IOException;
+import java.io.Reader;
+import java.nio.file.Files;
+import java.nio.file.Path;
+
+public class Main {
+    public static void main(String[] args) throws IOException {
+        // If you were following along, we created this earlier!
+        Json song;
+        try (Reader fileReader = Files.newBufferedReader(
+                Path.of("song.json"))
+        ) {
+            song = Json.read(fileReader);
+        }
+
+        System.out.println(song);
+    }
+}
+```
+
+If the JSON you provide is malformed in some way, a `JsonReadException` will be thrown.
+
+```java
+import dev.mccue.json.Json;
+
+public class Main {
+    public static void main(String[] args) {
+        // Should be in quotes
+        Json.readString("fozzie");
+    }
+}
+```
+
+```java
+Exception in thread "main" dev.mccue.json.JsonReadException: JSON error (unexpected character): f
+	at dev.mccue.json.JsonReadException.unexpectedCharacter(JsonReadException.java:33)
+	at dev.mccue.json.internal.JsonReaderMethods.readStream(JsonReaderMethods.java:525)
+	at dev.mccue.json.internal.JsonReaderMethods.read(JsonReaderMethods.java:533)
+	at dev.mccue.json.internal.JsonReaderMethods.readFullyConsume(JsonReaderMethods.java:543)
+	at dev.mccue.json.Json.readString(Json.java:369)
+	at dev.mccue.json.Json.readString(Json.java:364)
+	at dev.mccue.example.Main.main(Main.java:9)
+```
+
+### Decoding
+
+Up to this point, everything has been more or less the same as it is for other "tree-based"
+JSON libraries like [org.json](https://github.com/stleary/JSON-java) or [json-simple](https://github.com/fangyidong/json-simple).
+
+This is where that will start to change.
+
+To take some `Json` and turn it into a user defined class, a basic approach would be to use `instanceof` checks to see if
+the `Json` is a particular subtype and navigate from there.
+
+```java
+import dev.mccue.json.*;
+
+record Muppet(String name, boolean canSpeak) {
+    static Muppet fromJson(Json json) {
+        if (json instanceof JsonObject object &&
+            object.get("name") instanceof JsonString name &&
+            object.get("canSpeak") instanceof JsonBoolean canSpeak) {
+            return new Muppet(name.toString(), canSpeak.value());
+        }
+        else {
+            throw new RuntimeException("Invalid Muppet");
+        }
+    }
+}
+
+public class Main {
+    public static void main(String[] args) {
+        var json = Json.readString("""
+                {
+                    "name": "animal",
+                    "canSpeak": false
+                }
+                """);
+
+        var animal = Muppet.fromJson(json);
+
+        System.out.println(animal);
+    }
+}
+```
+
+This process is "decoding." You "read" your data into JSON and then "decode"
+it to some type you define.
+
+The problem with the `instanceof` approach is that you will end up with bad error messages on unexpected data.
+In this case the error message would just be `"Invalid Muppet"`. The code to get better errors is tedious to write
+and I haven't seen many folks in the wild do it.
+
+To get good errors, you should use the static methods defined in `JsonDecoder`.
+
+```java
+package dev.mccue.example;
+
+import dev.mccue.json.*;
+
+record Muppet(String name, boolean canSpeak) {
+    static Muppet fromJson(Json json) {
+        return new Muppet(
+                JsonDecoder.field(
+                        json,
+                        "name", 
+                        JsonDecoder::string
+                ),
+                JsonDecoder.field(
+                        json, 
+                        "canSpeak", 
+                        JsonDecoder::boolean_
+                )
+        );
+    }
+}
+
+public class Main {
+    public static void main(String[] args) {
+        var json = Json.readString("""
+                {
+                    "name": "animal",
+                    "canSpeak": false
+                }
+                """);
+
+        var animal = Muppet.fromJson(json);
+
+        System.out.println(animal);
+    }
+}
+```
+
+These handle the fiddly process of checking whether the JSON matches the structure you
+expect and throwing an appropriate error.
+
+You should read this declaration as "at the field `name` I expect a string."
+
+```java
+JsonDecoder.field(json, "name", JsonDecoder::string)
+```
+
+If the JSON is not an object, or doesn't have a value for `name`, or that value
+is not a string, you will get a `JsonDecodeException`.
+
+```java
+public class Main {
+    public static void main(String[] args) {
+        var json = Json.readString("""
+                {
+                    "canSpeak": false
+                }
+                """);
+
+        var animal = JsonDecoder.field(
+                json, 
+                "name", 
+                JsonDecoder::string
+        );
+
+        System.out.println(animal);
+    }
+}
+```
+Which will have a message indicating exactly what went wrong and where.
+
+```java 
+Problem with the value at json.name:
+
+    {
+        "canSpeak": false
+    }
+
+no value for field
+```
+
+The last argument to `JsonDecoder.field` is the `JsonDecoder` you want to use to interpret the value at that field.
+In this case a method reference to `JsonDecoder.string`, which is a method that asserts JSON is a string
+and throws if it isn't.
+
+For the methods which take more than one argument, there are overloads
+which can be used to get an instance of `JsonDecoder`.
+
+```java
+// This will actually decode the json into a list of strings
+List<String> items = JsonDecoder.array(json, JsonDecoder::string);
+
+// This will just return a decoder
+Decoder<List<String>> decoder = 
+        JsonDecoder.array(JsonDecoder::string);
+```
+
+This, in conjunction with `JsonDecoder.field` is how you are intended to explore nested paths.
+
+```java
+public class Main {
+    public static void main(String[] args) {
+        var json = Json.readString("""
+                {
+                    "villains": ["constantine", "doc hopper"]
+                }
+                """);
+
+        List<String> villains = JsonDecoder.field(
+                json,
+                "villains",
+                JsonDecoder.array(JsonDecoder::string)
+        );
+
+        System.out.println(villains);
+    }
+}
+```
+
+To decode JSON into your custom classes, you should add either a constructor or
+a static factory method which takes in `Json` and use these decoders to make your objects.
+
+```java
+import dev.mccue.json.*;
+
+import java.util.List;
+
+record Actor(String name, String role, boolean muppet) {
+    static Actor fromJson(Json json) {
+        return new Actor(
+                JsonDecoder.field(json, "name", JsonDecoder::string),
+                JsonDecoder.field(json, "role", JsonDecoder::string),
+                JsonDecoder.optionalField(
+                        json, 
+                        "muppet",
+                        JsonDecoder::boolean_,
+                        true
+                )
+        );
+    }
+}
+
+
+record Movie(String title, List<Actor> cast) {
+    static Movie fromJson(Json json) {
+        return new Movie(
+                JsonDecoder.field(json, "title", JsonDecoder::string),
+                JsonDecoder.field(
+                        json, 
+                        "cast", 
+                        JsonDecoder.array(Actor::fromJson)
+                )
+        );
+    }
+}
+
+public class Main {
+    public static void main(String[] args) {
+        var json = Json.readString("""
+                 {
+                     "title": "Treasure Island",
+                     "cast": [
+                         {
+                             "name": "Kermit",
+                             "role": "The Captain"
+                         },
+                         {
+                             "name": "Tim Curry",
+                             "role": "Long John Silver",
+                             "muppet": false
+                         }
+                     ]
+                 }
+                 """);
+
+        var movie = Movie.fromJson(json);
+
+        System.out.println(movie);
+    }
+}
+```
+
+### Full Round-Trip
+
+With all of that out of the way, here is how you might define a model,
+write it to json, and read it back in.
+
+```java
+import dev.mccue.json.*;
+
+import java.util.List;
+
+record Actor(String name, String role, boolean muppet)
+    implements JsonEncodable {
+    static Actor fromJson(Json json) {
+        return new Actor(
+                JsonDecoder.field(json, "name", JsonDecoder::string),
+                JsonDecoder.field(json, "role", JsonDecoder::string),
+                JsonDecoder.optionalField(
+                        json,
+                        "muppet",
+                        JsonDecoder::boolean_,
+                        true)
+        );
+    }
+
+    @Override
+    public Json toJson() {
+        return Json.objectBuilder()
+                .put("name", name)
+                .put("role", role)
+                .put("muppet", muppet)
+                .build();
+    }
+}
+
+
+record Movie(String title, List<Actor> cast)
+    implements JsonEncodable {
+    static Movie fromJson(Json json) {
+        return new Movie(
+                JsonDecoder.field(json, "title", JsonDecoder::string),
+                JsonDecoder.field(
+                        json, 
+                        "cast", 
+                        JsonDecoder.array(Actor::fromJson)
+                )
+        );
+    }
+
+    @Override
+    public Json toJson() {
+        return Json.objectBuilder()
+                .put("title", title)
+                .put("cast", cast)
+                .build();
+    }
+}
+
+public class Main {
+    public static void main(String[] args) {
+        var json = Json.readString("""
+                 {
+                     "title": "Treasure Island",
+                     "cast": [
+                         {
+                             "name": "Kermit",
+                             "role": "The Captain",
+                             "muppet": true
+                         },
+                         {
+                             "name": "Tim Curry",
+                             "role": "Long John Silver",
+                             "muppet": false
+                         }
+                     ]
+                 }
+                 """);
+
+        var movie = Movie.fromJson(json);
+
+        var roundTrippedJson = Json.readString(
+                Json.writeString(movie.toJson())
+        );
+        var roundTrippedMovie = Movie.fromJson(roundTrippedJson);
+
+        System.out.println(
+                json.equals(roundTrippedJson)
+        );
+
+        System.out.println(
+                movie.equals(roundTrippedMovie)
+        );
+    }
+}
+```
+</details>
+
 
 ## Examples
 
@@ -70,6 +843,7 @@ public class Main {
 
 ```java
 import dev.mccue.json.Json;
+import dev.mccue.json.JsonArray;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
@@ -77,7 +851,7 @@ import java.util.List;
 
 public class Main {
    public static void main(String[] args) {
-      List<Json> numbers = List.of(
+      JsonArray numbers = JsonArray.of(
               Json.of(1),
               Json.of(2L),
               Json.of(3.5),

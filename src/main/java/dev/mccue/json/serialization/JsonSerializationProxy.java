@@ -20,7 +20,7 @@ import java.util.Objects;
  *     freely.
  * </p>
  *
- * @param json
+ * @param json A string representation of the JSON being serialized.
  */
 public record JsonSerializationProxy(String json) implements Serializable {
     @Serial
