@@ -843,6 +843,7 @@ public class Main {
 
 ```java
 import dev.mccue.json.Json;
+import dev.mccue.json.JsonArray;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
@@ -850,7 +851,7 @@ import java.util.List;
 
 public class Main {
    public static void main(String[] args) {
-      List<Json> numbers = List.of(
+      JsonArray numbers = JsonArray.of(
               Json.of(1),
               Json.of(2L),
               Json.of(3.5),
