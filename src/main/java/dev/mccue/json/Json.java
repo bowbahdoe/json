@@ -240,8 +240,39 @@ public sealed interface Json
     }
 
     /**
+     * Creates {@link Json} from a {@link Collection} of items which
+     * can be encoded with a provided {@link JsonEncoder}.
+     *
+     * @param value The value to be encoded.
+     * @return An instance of {@link Json}.
+     */
+    static <T> Json of(Collection<? extends T> value, JsonEncoder<T> encoder) {
+        return value == null
+                ? JsonNull.instance()
+                : new ArrayImpl(
+                value.stream()
+                        .map(v -> {
+                            var result = encoder.encode(v);
+                            if (result == null) {
+                                return JsonNull.instance();
+                            }
+                            else {
+                                return result;
+                            }
+                        })
+                        .toList()
+        );
+    }
+
+
+    /**
      * Creates {@link Json} from a {@link Map} with {@link String} keys to values which
      * implement {@link JsonEncodable}.
+     *
+     * <p>
+     *     Note that this method is null-safe when provided a null container,
+     *     but only null-safe for map values if the provided encoder also is.
+     * </p>
      *
      * @param value The value to be encoded.
      * @return An instance of {@link Json}.
@@ -260,6 +291,40 @@ public sealed interface Json
                                                 : entry.getValue().toJson()
                                 ))
                 );
+    }
+
+    /**
+     * Creates {@link Json} from a {@link Map} with {@link String} keys to values which
+     * can be encoded with a provided {@link JsonEncoder}.
+     *
+     * <p>
+     *     Note that this method is null-safe when provided a null container,
+     *     but only null-safe for map values if the provided encoder also is.
+     * </p>
+     *
+     * @param value The value to be encoded.
+     * @return An instance of {@link Json}.
+     */
+    static <T> Json of(Map<String, ? extends T> value, JsonEncoder<T> encoder) {
+        return value == null
+                ? JsonNull.instance()
+                : new ObjectImpl(
+                value
+                        .entrySet()
+                        .stream()
+                        .collect(Collectors.toUnmodifiableMap(
+                                Map.Entry::getKey,
+                                entry -> {
+                                    var result = encoder.encode(entry.getValue());
+                                    if (result == null) {
+                                        return JsonNull.instance();
+                                    }
+                                    else {
+                                        return result;
+                                    }
+                                }
+                        ))
+        );
     }
 
     /**
