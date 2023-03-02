@@ -4,6 +4,8 @@ import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -33,6 +35,64 @@ public class JsonTest {
         assertEquals(
                 JsonArray.of(Json.ofFalse(), Json.of(1), Json.of("abc")),
                 Json.of(List.of((JsonEncodable) Json::ofFalse, Json.of(1), Json.of("abc")))
+        );
+
+        var l = new ArrayList<Json>();
+        l.add(null);
+        assertEquals(
+                JsonArray.of(JsonNull.instance()),
+                Json.of(l)
+        );
+    }
+
+    @Test
+    public void testOfCollectionEncodable() {
+        assertEquals(
+                JsonArray.of(Json.ofFalse()),
+                Json.of(List.of(false), JsonBoolean::of)
+        );
+
+        assertEquals(
+                JsonArray.of(Json.ofNull()),
+                Json.of(List.of(false), __ -> null)
+        );
+
+        assertEquals(
+                JsonArray.of(Json.ofNull()),
+                Json.of(List.of(false), __ -> JsonNull.instance())
+        );
+    }
+
+    @Test
+    public void testOfMap() {
+        var m = new HashMap<String, JsonEncodable>();
+        m.put("a", null);
+        m.put("b", Json.of(1));
+
+        assertEquals(
+                JsonObject.of(Map.of(
+                        "a", JsonNull.instance(),
+                                "b", Json.of(1)
+                        )),
+                Json.of(m)
+        );
+    }
+
+    @Test
+    public void testOfMapEncoder() {
+        var m = new HashMap<String, Integer>();
+        m.put("a", 6);
+        m.put("b", 7);
+
+        m.put("c", null);
+
+        assertEquals(
+                JsonObject.of(Map.of(
+                        "a", Json.of(6),
+                        "b", Json.of(7),
+                        "c", JsonNull.instance()
+                )),
+                Json.of(m, Json::of)
         );
     }
 
