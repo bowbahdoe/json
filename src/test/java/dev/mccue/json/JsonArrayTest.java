@@ -7,8 +7,7 @@ import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class JsonArrayTest {
     @Test
@@ -130,5 +129,13 @@ public class JsonArrayTest {
             assertThrows(UnsupportedOperationException.class, () -> array.retainAll(List.of(Json.ofNull())));
             assertThrows(UnsupportedOperationException.class, () -> array.remove(0));
         }
+    }
+
+    @Test
+    public void emptyArrays() {
+        assertSame(
+                Json.emptyArray(),
+                JsonArray.empty()
+        );
     }
 }

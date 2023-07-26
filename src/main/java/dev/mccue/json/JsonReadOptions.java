@@ -6,7 +6,9 @@ import java.util.Objects;
  * Options for customizing the process of reading Json.
  *
  * @param eofBehavior What to do if an attempted read reaches an EOF without any Json being read.
- * @param useBigDecimals Whether to use BigDecimals when reading decimal numbers
+ * @param useBigDecimals Whether to use BigDecimals when reading decimal numbers.
+ *
+ * @author <a href="ethan@mccue.dev">Ethan McCue</a>
  */
 public record JsonReadOptions(
         EOFBehavior eofBehavior,

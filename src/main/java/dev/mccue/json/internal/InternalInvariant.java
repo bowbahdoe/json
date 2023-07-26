@@ -10,7 +10,7 @@ import java.lang.annotation.Target;
  * but isn't enforced by internal constructors for efficiency.
  */
 @Retention(RetentionPolicy.SOURCE)
-@Target({ElementType.RECORD_COMPONENT, ElementType.METHOD})
+@Target({ElementType.RECORD_COMPONENT, ElementType.CONSTRUCTOR, ElementType.METHOD})
 @interface InternalInvariant {
     String[] value();
 }

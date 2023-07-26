@@ -1,5 +1,7 @@
 package dev.mccue.json;
 
+import org.jspecify.annotations.Nullable;
+
 import java.util.function.Function;
 
 /**
@@ -11,8 +13,9 @@ import java.util.function.Function;
  *     have an intrinsic Json representation.
  * </p>
  * @param <T> The type of element to encode.
+ * @author <a href="ethan@mccue.dev">Ethan McCue</a>
  */
-public interface JsonEncoder<T> {
+public interface JsonEncoder<T extends @Nullable Object> {
     /**
      * Encodes the given value to Json.
      * @param value The value to encode.
@@ -38,7 +41,7 @@ public interface JsonEncoder<T> {
      * @return A {@link JsonEncoder}.
      * @param <T> The type to encode.
      */
-    static <T> JsonEncoder<T> of(JsonEncoder<? super T> encoder) {
+    static <T extends @Nullable Object> JsonEncoder<T> of(JsonEncoder<? super T> encoder) {
         return encoder::encode;
     }
 
@@ -48,7 +51,7 @@ public interface JsonEncoder<T> {
      * @return An encoder that encodes a different type.
      * @param <R> The type the returned encoder will encode.
      */
-    default <R> JsonEncoder<R> map(Function<? super R, ? extends T> f) {
+    default <R extends @Nullable Object> JsonEncoder<R> map(Function<? super R, ? extends T> f) {
         return r -> this.encode(f.apply(r));
     }
 }

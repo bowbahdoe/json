@@ -1,12 +1,10 @@
 package dev.mccue.json.internal;
 
 import dev.mccue.json.*;
-import dev.mccue.json.internal.ArrayBuilderImpl;
-import dev.mccue.json.internal.ObjectBuilder;
-import dev.mccue.json.internal.ValueCandidate;
 import dev.mccue.json.stream.JsonArrayHandler;
 import dev.mccue.json.stream.JsonObjectHandler;
 import dev.mccue.json.stream.JsonValueHandler;
+import org.jspecify.annotations.Nullable;
 
 import java.util.function.Consumer;
 
@@ -123,7 +121,7 @@ final class Handlers {
     }
 
     static final class BaseTreeValueHandler implements JsonValueHandler {
-        Json result;
+        @Nullable Json result;
         final TreeValueHandler delegate;
 
         BaseTreeValueHandler() {

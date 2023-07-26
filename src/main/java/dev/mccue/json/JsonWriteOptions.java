@@ -12,6 +12,8 @@ import dev.mccue.json.internal.ValueCandidate;
  *                                   valid in JavaScript strings.).
  * @param escapeSlash If true (default) the slash / is escaped as \\/
  * @param indentation How many spaces to indent after an object or array start.
+ *
+ * @author <a href="ethan@mccue.dev">Ethan McCue</a>
  */
 @ValueCandidate
 public record JsonWriteOptions(

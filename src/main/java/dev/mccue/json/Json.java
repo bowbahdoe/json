@@ -3,6 +3,7 @@ package dev.mccue.json;
 import dev.mccue.json.internal.*;
 import dev.mccue.json.stream.JsonStreamReadOptions;
 import dev.mccue.json.stream.JsonValueHandler;
+import org.jspecify.annotations.Nullable;
 
 import java.io.*;
 import java.math.BigDecimal;
@@ -11,6 +12,8 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collector;
 import java.util.stream.Collectors;
 
 /**
@@ -41,6 +44,8 @@ import java.util.stream.Collectors;
  *     Unless otherwise specified, all factory methods in this interface are null-safe and will replace
  *     any actual nulls with {@link JsonNull}.
  * </p>
+ *
+ * @author <a href="ethan@mccue.dev">Ethan McCue</a>
  */
 public sealed interface Json
         extends Serializable, JsonEncodable
@@ -52,7 +57,7 @@ public sealed interface Json
      * @param value The value to be encoded.
      * @return An instance of {@link Json}.
      */
-    static Json of(JsonEncodable value) {
+    static Json of(@Nullable JsonEncodable value) {
         if (value == null) {
             return JsonNull.instance();
         }
@@ -73,7 +78,7 @@ public sealed interface Json
      * @param value The value to be encoded.
      * @return An instance of {@link Json}.
      */
-    static Json of(BigDecimal value) {
+    static Json of(@Nullable BigDecimal value) {
         return value == null ? JsonNull.instance() : new BigDecimalImpl(value);
     }
 
@@ -123,7 +128,7 @@ public sealed interface Json
      * @param value The value to be encoded.
      * @return An instance of {@link Json}.
      */
-    static Json of(Double value) {
+    static Json of(@Nullable Double value) {
         return value == null ? JsonNull.instance() : new DoubleImpl(value);
     }
 
@@ -133,7 +138,7 @@ public sealed interface Json
      * @param value The value to be encoded.
      * @return An instance of {@link Json}.
      */
-    static Json of(Long value) {
+    static Json of(@Nullable Long value) {
         return value == null ? JsonNull.instance() : new LongImpl(value);
     }
 
@@ -143,7 +148,7 @@ public sealed interface Json
      * @param value The value to be encoded.
      * @return An instance of {@link Json}.
      */
-    static Json of(Float value) {
+    static Json of(@Nullable Float value) {
         return value == null ? JsonNull.instance() : new DoubleImpl(value);
     }
 
@@ -153,7 +158,7 @@ public sealed interface Json
      * @param value The value to be encoded.
      * @return An instance of {@link Json}.
      */
-    static Json of(Integer value) {
+    static Json of(@Nullable Integer value) {
         return value == null ? JsonNull.instance() : new LongImpl(value);
     }
 
@@ -163,7 +168,7 @@ public sealed interface Json
      * @param value The value to be encoded.
      * @return An instance of {@link Json}.
      */
-    static Json of(BigInteger value) {
+    static Json of(@Nullable BigInteger value) {
         return value == null ? JsonNull.instance() : new BigIntegerImpl(value);
     }
 
@@ -173,7 +178,7 @@ public sealed interface Json
      * @param value The value to be encoded.
      * @return An instance of {@link Json}.
      */
-    static Json of(String value) {
+    static Json of(@Nullable String value) {
         return value == null ? JsonNull.instance() : new StringImpl(value);
     }
 
@@ -218,7 +223,7 @@ public sealed interface Json
      * @param value The value to be encoded.
      * @return An instance of {@link Json}.
      */
-    static Json of(Boolean value) {
+    static Json of(@Nullable Boolean value) {
         return value == null ? JsonNull.instance() : JsonBoolean.of(value);
     }
 
@@ -229,7 +234,7 @@ public sealed interface Json
      * @param value The value to be encoded.
      * @return An instance of {@link Json}.
      */
-    static Json of(Collection<? extends JsonEncodable> value) {
+    static Json of(@Nullable Collection<? extends @Nullable JsonEncodable> value) {
         return value == null
                 ? JsonNull.instance()
                 : new ArrayImpl(
@@ -246,7 +251,10 @@ public sealed interface Json
      * @param value The value to be encoded.
      * @return An instance of {@link Json}.
      */
-    static <T> Json of(Collection<? extends T> value, JsonEncoder<T> encoder) {
+    static <T extends @Nullable Object> Json of(
+            @Nullable Collection<? extends T> value,
+            JsonEncoder<T> encoder
+    ) {
         return value == null
                 ? JsonNull.instance()
                 : new ArrayImpl(
@@ -277,7 +285,7 @@ public sealed interface Json
      * @param value The value to be encoded.
      * @return An instance of {@link Json}.
      */
-    static Json of(Map<String, ? extends JsonEncodable> value) {
+    static Json of(@Nullable Map<String, ? extends @Nullable JsonEncodable> value) {
         return value == null
                 ? JsonNull.instance()
                 : new ObjectImpl(
@@ -305,7 +313,10 @@ public sealed interface Json
      * @param value The value to be encoded.
      * @return An instance of {@link Json}.
      */
-    static <T> Json of(Map<String, ? extends T> value, JsonEncoder<T> encoder) {
+    static <T> Json of(
+            @Nullable Map<String, ? extends @Nullable T> value,
+            JsonEncoder<T> encoder
+    ) {
         return value == null
                 ? JsonNull.instance()
                 : new ObjectImpl(
@@ -372,7 +383,7 @@ public sealed interface Json
      * @param elements A collection of elements which can be turned into {@link Json}.
      * @return A new {@link JsonArray.Builder}.
      */
-    static JsonArray.Builder arrayBuilder(Collection<? extends JsonEncodable> elements) {
+    static JsonArray.Builder arrayBuilder(Collection<? extends @Nullable JsonEncodable> elements) {
         if (elements instanceof JsonArray o) {
             return new ArrayBuilderImpl(new ArrayList<>(o));
         }
@@ -399,6 +410,32 @@ public sealed interface Json
      */
     static JsonObject emptyObject() {
         return ObjectImpl.EMPTY;
+    }
+
+    /**
+     * Returns a {@link Collector} which makes a {@link JsonArray} as a terminal {@link java.util.stream.Stream}
+     * operation.
+     *
+     * @return A {@link Collector}.
+     */
+    static Collector<JsonEncodable, ?, JsonArray> arrayCollector() {
+        return JsonArray.collector();
+    }
+
+    /**
+     * Returns a {@link Collector} which makes a {@link JsonObject} as a terminal {@link java.util.stream.Stream}
+     * operation.
+     *
+     * @param keyMapper Function to extract a {@link String} from the stream.
+     * @param valueMapper Function to extract something {@link JsonEncodable} from the stream.
+     * @return A {@link Collector}.
+     * @param <T> The type of element stored in the stream.
+     */
+    static <T extends @Nullable Object> Collector<T, ?, JsonObject> objectCollector(
+            Function<? super T, String> keyMapper,
+            Function<? super T, ? extends JsonEncodable> valueMapper
+    ) {
+        return JsonObject.collector(keyMapper, valueMapper);
     }
 
     /**
@@ -432,7 +469,7 @@ public sealed interface Json
     static Json readString(CharSequence jsonText, JsonReadOptions options) throws JsonReadException {
         try {
             return JsonReaderMethods.readFullyConsume(new PushbackReader(
-                    new StringReader(jsonText.toString()), JsonReaderMethods.MINIMUM_PUSHBACK_BUFFER_SIZE
+                    new StringReader(jsonText.toString())
             ), options);
         } catch (IOException e) {
             throw new UncheckedIOException(e);
@@ -441,7 +478,7 @@ public sealed interface Json
 
     static Json read(Reader reader, JsonReadOptions options) throws IOException, JsonReadException {
         return JsonReaderMethods.readFullyConsume(
-                new PushbackReader(reader, JsonReaderMethods.MINIMUM_PUSHBACK_BUFFER_SIZE),
+                new PushbackReader(reader),
                 options
         );
     }
@@ -452,8 +489,7 @@ public sealed interface Json
 
     static JsonReader reader(Reader reader, JsonReadOptions options) {
         var pushbackReader = new PushbackReader(
-                reader,
-                JsonReaderMethods.MINIMUM_PUSHBACK_BUFFER_SIZE
+                reader
         );
         return () -> {
             try {
@@ -471,7 +507,7 @@ public sealed interface Json
 
     static void readStream(Reader reader, JsonValueHandler handler, JsonStreamReadOptions options) throws IOException, JsonReadException {
         JsonReaderMethods.readStream(
-                new PushbackReader(reader, JsonReaderMethods.MINIMUM_PUSHBACK_BUFFER_SIZE),
+                new PushbackReader(reader),
                 false,
                 options,
                 handler
@@ -480,7 +516,7 @@ public sealed interface Json
 
     static void readStream(Reader reader, JsonValueHandler handler) throws IOException, JsonReadException {
         JsonReaderMethods.readStream(
-                new PushbackReader(reader, JsonReaderMethods.MINIMUM_PUSHBACK_BUFFER_SIZE),
+                new PushbackReader(reader),
                 false,
                 new JsonStreamReadOptions(),
                 handler
@@ -501,11 +537,11 @@ public sealed interface Json
         return sw.toString();
     }
 
-    static String writeString(JsonEncodable jsonEncodable) {
+    static String writeString(@Nullable JsonEncodable jsonEncodable) {
         return writeString(Json.of(jsonEncodable));
     }
 
-    static String writeString(JsonEncodable jsonEncodable, JsonWriteOptions options) {
+    static String writeString(@Nullable JsonEncodable jsonEncodable, JsonWriteOptions options) {
         return writeString(Json.of(jsonEncodable), options);
     }
 
@@ -517,11 +553,11 @@ public sealed interface Json
         new JsonWriter().write(json, writer, new JsonWriteOptions());
     }
 
-    static void write(JsonEncodable jsonEncodable, Writer writer, JsonWriteOptions options) throws IOException {
+    static void write(@Nullable JsonEncodable jsonEncodable, Writer writer, JsonWriteOptions options) throws IOException {
         write(Json.of(jsonEncodable), writer, options);
     }
 
-    static void write(JsonEncodable jsonEncodable, Writer writer) throws IOException {
+    static void write(@Nullable JsonEncodable jsonEncodable, Writer writer) throws IOException {
         write(Json.of(jsonEncodable), writer);
     }
 }

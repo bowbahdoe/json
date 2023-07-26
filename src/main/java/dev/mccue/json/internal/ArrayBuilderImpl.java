@@ -1,6 +1,7 @@
 package dev.mccue.json.internal;
 
 import dev.mccue.json.*;
+import org.jspecify.annotations.Nullable;
 
 import java.util.*;
 
@@ -15,13 +16,13 @@ public record ArrayBuilderImpl(ArrayList<Json> values) implements JsonArray.Buil
     }
 
     @Override
-    public JsonArray.Builder add(Json value) {
+    public JsonArray.Builder add(@Nullable Json value) {
         this.values.add(value == null ? Json.ofNull() : value);
         return this;
     }
 
     @Override
-    public JsonArray.Builder addAll(Collection<? extends JsonEncodable> value) {
+    public JsonArray.Builder addAll(Collection<? extends @Nullable JsonEncodable> value) {
         Objects.requireNonNull(value);
         value.forEach(v -> this.values.add(v == null ? Json.ofNull() : v.toJson()));
         return this;

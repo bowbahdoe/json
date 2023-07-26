@@ -6,7 +6,7 @@
 
     <groupId>dev.mccue</groupId>
     <artifactId>json</artifactId>
-    <version>0.2.3</version>
+    <version>0.2.4</version>
     <packaging>jar</packaging>
 
     <properties>
@@ -43,6 +43,12 @@
 
     <dependencies>
         <dependency>
+            <groupId>org.jspecify</groupId>
+            <artifactId>jspecify</artifactId>
+            <version>0.3.0</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter-engine</artifactId>
             <version>5.9.0</version>
@@ -60,8 +66,8 @@
                     <source>17</source>
                     <target>17</target>
                     <compilerArgs>
-                        <arg>-Werror</arg>
                         <arg>-Xlint:all</arg>
+                        <arg>-Werror</arg>
                     </compilerArgs>
                 </configuration>
             </plugin>
