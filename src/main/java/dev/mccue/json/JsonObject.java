@@ -1,5 +1,6 @@
 package dev.mccue.json;
 
+import dev.mccue.json.internal.ArrayBuilderImpl;
 import dev.mccue.json.internal.ObjectBuilder;
 import dev.mccue.json.internal.ObjectImpl;
 import org.jspecify.annotations.Nullable;
@@ -9,6 +10,8 @@ import java.math.BigInteger;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Objects;
+import java.util.function.Function;
+import java.util.stream.Collector;
 import java.util.stream.Collectors;
 
 /**
@@ -36,6 +39,38 @@ public sealed interface JsonObject extends Json, Map<String, Json> permits Objec
 
     static Builder builder(int initialCapacity) {
         return new ObjectBuilder(initialCapacity);
+    }
+
+    /**
+     * Returns a {@link Collector} which makes a {@link JsonObject} as a terminal {@link java.util.stream.Stream}
+     * operation.
+     *
+     * @param keyMapper Function to extract a {@link String} from the stream.
+     * @param valueMapper Function to extract something {@link JsonEncodable} from the stream.
+     * @return A {@link Collector}.
+     * @param <T> The type of element stored in the stream.
+     */
+    static <T extends @Nullable Object> Collector<T, ?, JsonObject> collector(
+            Function<? super T, String> keyMapper,
+            Function<? super T, ? extends JsonEncodable> valueMapper
+    ) {
+        return Collector.of(
+                JsonObject::builder,
+                (JsonObject.Builder builder, T o) -> builder.put(
+                        keyMapper.apply(o),
+                        valueMapper.apply(o).toJson()
+                ),
+                (a, b) -> {
+                    var impl = (ObjectBuilder) b;
+                    a.putAll(impl.values());
+                    return a;
+                },
+                JsonObject.Builder::build
+        );
+    }
+
+    static JsonObject empty() {
+        return ObjectImpl.EMPTY;
     }
 
     sealed interface Builder extends JsonEncodable permits ObjectBuilder {

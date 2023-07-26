@@ -21,6 +21,7 @@ import java.util.Objects;
  * </p>
  *
  * @param json A string representation of the JSON being serialized.
+ * @author <a href="ethan@mccue.dev">Ethan McCue</a>
  */
 public record JsonSerializationProxy(String json) implements Serializable {
     @Serial

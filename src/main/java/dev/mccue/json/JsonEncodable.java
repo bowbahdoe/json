@@ -22,6 +22,8 @@ import dev.mccue.json.stream.JsonWriteable;
  *     For convenience, there is a vacuous implementation on
  *     Json itself.
  * </p>
+ *
+ * @author <a href="ethan@mccue.dev">Ethan McCue</a>
  */
 public interface JsonEncodable extends JsonWriteable {
     /**

@@ -15,6 +15,8 @@ import java.util.function.Function;
  * </p>
  *
  * @param <T> The type that being constructed from the Json.
+ *
+ * @author <a href="ethan@mccue.dev">Ethan McCue</a>
  */
 @FunctionalInterface
 public interface JsonDecoder<T extends @Nullable Object> {

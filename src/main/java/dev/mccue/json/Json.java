@@ -12,6 +12,8 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collector;
 import java.util.stream.Collectors;
 
 /**
@@ -42,6 +44,8 @@ import java.util.stream.Collectors;
  *     Unless otherwise specified, all factory methods in this interface are null-safe and will replace
  *     any actual nulls with {@link JsonNull}.
  * </p>
+ *
+ * @author <a href="ethan@mccue.dev">Ethan McCue</a>
  */
 public sealed interface Json
         extends Serializable, JsonEncodable
@@ -406,6 +410,32 @@ public sealed interface Json
      */
     static JsonObject emptyObject() {
         return ObjectImpl.EMPTY;
+    }
+
+    /**
+     * Returns a {@link Collector} which makes a {@link JsonArray} as a terminal {@link java.util.stream.Stream}
+     * operation.
+     *
+     * @return A {@link Collector}.
+     */
+    static Collector<JsonEncodable, ?, JsonArray> arrayCollector() {
+        return JsonArray.collector();
+    }
+
+    /**
+     * Returns a {@link Collector} which makes a {@link JsonObject} as a terminal {@link java.util.stream.Stream}
+     * operation.
+     *
+     * @param keyMapper Function to extract a {@link String} from the stream.
+     * @param valueMapper Function to extract something {@link JsonEncodable} from the stream.
+     * @return A {@link Collector}.
+     * @param <T> The type of element stored in the stream.
+     */
+    static <T extends @Nullable Object> Collector<T, ?, JsonObject> objectCollector(
+            Function<? super T, String> keyMapper,
+            Function<? super T, ? extends JsonEncodable> valueMapper
+    ) {
+        return JsonObject.collector(keyMapper, valueMapper);
     }
 
     /**

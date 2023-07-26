@@ -10,6 +10,8 @@ import java.util.Objects;
  *    An exception to be thrown when failing to "decode" some JSON into
  *    another shape.
  * </p>
+ *
+ * @author <a href="ethan@mccue.dev">Ethan McCue</a>
  */
 public sealed abstract class JsonDecodeException extends RuntimeException {
     @Serial

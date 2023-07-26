@@ -7,8 +7,7 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.*;
 
 
 public class JsonObjectTest {
@@ -65,5 +64,13 @@ public class JsonObjectTest {
         assertThrows(UnsupportedOperationException.class, () -> o.computeIfPresent("a", (__, ___) -> Json.of("a")));
         assertThrows(UnsupportedOperationException.class, () -> o.remove("a"));
         assertThrows(UnsupportedOperationException.class, () -> o.remove("a", Json.of("b")));
+    }
+
+    @Test
+    public void emptyObjects() {
+        assertSame(
+                Json.emptyObject(),
+                JsonObject.empty()
+        );
     }
 }

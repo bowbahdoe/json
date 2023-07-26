@@ -8,6 +8,8 @@ import java.io.Serial;
 
 /**
  * Represents true in the json data model.
+ *
+ * @author <a href="ethan@mccue.dev">Ethan McCue</a>
  */
 @ValueCandidate
 public final class JsonTrue implements JsonBoolean {

@@ -5,6 +5,8 @@ import dev.mccue.json.internal.ValueCandidate;
 
 /**
  * Represents a string in the json data model.
+ *
+ * @author <a href="ethan@mccue.dev">Ethan McCue</a>
  */
 @ValueCandidate
 public sealed interface JsonString extends Json, CharSequence permits

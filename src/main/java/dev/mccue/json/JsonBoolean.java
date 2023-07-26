@@ -4,6 +4,8 @@ import dev.mccue.json.internal.ValueCandidate;
 
 /**
  * Represents a boolean in the json data model.
+ *
+ * @author <a href="ethan@mccue.dev">Ethan McCue</a>
  */
 @ValueCandidate
 public sealed interface JsonBoolean extends Json, Comparable<JsonBoolean> permits JsonFalse, JsonTrue {

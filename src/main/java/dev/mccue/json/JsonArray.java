@@ -7,12 +7,14 @@ import org.jspecify.annotations.Nullable;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.List;
+import java.util.*;
+import java.util.stream.Collector;
+import java.util.stream.Collectors;
 
 /**
  * Represents an array in the json data model.
+ *
+ * @author <a href="ethan@mccue.dev">Ethan McCue</a>
  */
 public sealed interface JsonArray extends Json, List<Json> permits ArrayImpl {
     static JsonArray of(Json... values) {
@@ -29,6 +31,29 @@ public sealed interface JsonArray extends Json, List<Json> permits ArrayImpl {
 
     static Builder builder(int initialCapacity) {
         return new ArrayBuilderImpl(initialCapacity);
+    }
+
+    /**
+     * Returns a {@link Collector} which makes a {@link JsonArray} as a terminal {@link java.util.stream.Stream}
+     * operation.
+     *
+     * @return A {@link Collector}
+     */
+    static Collector<JsonEncodable, ?, JsonArray> collector() {
+        return Collector.of(
+                JsonArray::builder,
+                (JsonArray.Builder builder, JsonEncodable o) -> builder.add(o.toJson()),
+                (a, b) -> {
+                    var impl = (ArrayBuilderImpl) b;
+                    a.addAll(impl.values());
+                    return a;
+                },
+                JsonArray.Builder::build
+        );
+    }
+
+    static JsonArray empty() {
+        return ArrayImpl.EMPTY;
     }
 
     sealed interface Builder extends JsonEncodable permits ArrayBuilderImpl {

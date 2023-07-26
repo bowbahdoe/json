@@ -8,6 +8,8 @@ import java.io.Serial;
 
 /**
  * Represents false in the json data model.
+ *
+ * @author <a href="ethan@mccue.dev">Ethan McCue</a>
  */
 @ValueCandidate
 public final class JsonFalse implements JsonBoolean {
