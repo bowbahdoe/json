@@ -8,6 +8,8 @@ import java.util.stream.StreamSupport;
 
 /**
  * An iterable view of a stream of Json.
+ *
+ * @author <a href="ethan@mccue.dev">Ethan McCue</a>
  */
 public interface JsonReader extends Iterable<Json> {
     Json read();

@@ -2,6 +2,11 @@ package dev.mccue.json;
 
 import java.io.Serial;
 
+/**
+ * An exception encountered when reading json.
+ *
+ * @author <a href="ethan@mccue.dev">Ethan McCue</a>
+ */
 public final class JsonReadException extends RuntimeException {
     @Serial
     private static final long serialVersionUID = 1L;

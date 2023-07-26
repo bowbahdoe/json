@@ -2,8 +2,10 @@ package dev.mccue.json;
 
 import dev.mccue.json.internal.ObjectBuilder;
 import dev.mccue.json.internal.ObjectImpl;
+import org.jspecify.annotations.Nullable;
 
 import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Objects;
@@ -11,9 +13,11 @@ import java.util.stream.Collectors;
 
 /**
  * Represents an object in the json data model.
+ *
+ * @author <a href="ethan@mccue.dev">Ethan McCue</a>
  */
 public sealed interface JsonObject extends Json, Map<String, Json> permits ObjectImpl {
-    static JsonObject of(Map<String, ? extends JsonEncodable> value) {
+    static JsonObject of(Map<String, ? extends @Nullable JsonEncodable> value) {
         return new ObjectImpl(value
                 .entrySet()
                 .stream()
@@ -35,93 +39,93 @@ public sealed interface JsonObject extends Json, Map<String, Json> permits Objec
     }
 
     sealed interface Builder extends JsonEncodable permits ObjectBuilder {
-        Builder put(java.lang.String key, Json value);
+        Builder put(String key, Json value);
 
-        default Builder put(java.lang.String key, java.lang.String value) {
+        default Builder put(String key, @Nullable String value) {
             return put(key, Json.of(value));
         }
 
-        default Builder put(java.lang.String key, BigDecimal value) {
+        default Builder put(String key, @Nullable BigDecimal value) {
             return put(key, Json.of(value));
         }
 
-        default Builder put(java.lang.String key, double value) {
+        default Builder put(String key, double value) {
             return put(key, Json.of(value));
         }
 
-        default Builder put(java.lang.String key, long value) {
+        default Builder put(String key, long value) {
             return put(key, Json.of(value));
         }
 
-        default Builder put(java.lang.String key, float value) {
+        default Builder put(String key, float value) {
             return put(key, Json.of(value));
         }
 
-        default Builder put(java.lang.String key, int value) {
+        default Builder put(String key, int value) {
             return put(key, Json.of(value));
         }
 
-        default Builder put(java.lang.String key, java.lang.Double value) {
+        default Builder put(String key, @Nullable Double value) {
             return put(key, Json.of(value));
         }
 
-        default Builder put(java.lang.String key, java.lang.Long value) {
+        default Builder put(String key, @Nullable Long value) {
             return put(key, Json.of(value));
         }
 
-        default Builder put(java.lang.String key, Float value) {
+        default Builder put(String key, @Nullable Float value) {
             return put(key, Json.of(value));
         }
 
-        default Builder put(java.lang.String key, Integer value) {
+        default Builder put(String key, @Nullable Integer value) {
             return put(key, Json.of(value));
         }
 
-        default Builder put(java.lang.String key, java.math.BigInteger value) {
+        default Builder put(String key, @Nullable BigInteger value) {
             return put(key, Json.of(value));
         }
 
-        default Builder putNull(java.lang.String key) {
+        default Builder putNull(String key) {
             return put(key, Json.ofNull());
         }
 
-        default Builder putTrue(java.lang.String key) {
+        default Builder putTrue(String key) {
             return put(key, Json.ofTrue());
         }
 
-        default Builder putFalse(java.lang.String key) {
+        default Builder putFalse(String key) {
             return put(key, Json.ofFalse());
         }
 
-        default Builder put(java.lang.String key, boolean value) {
+        default Builder put(String key, boolean value) {
             return put(key, Json.of(value));
         }
 
-        default Builder put(java.lang.String key, java.lang.Boolean value) {
+        default Builder put(String key, @Nullable Boolean value) {
             return put(key, Json.of(value));
         }
 
-        default Builder put(java.lang.String key, Collection<? extends JsonEncodable> value) {
+        default Builder put(String key, Collection<? extends @Nullable JsonEncodable> value) {
             return put(key, Json.of(value));
         }
 
-        default Builder put(java.lang.String key, Map<java.lang.String, ? extends JsonEncodable> value) {
+        default Builder put(String key, Map<String, ? extends @Nullable JsonEncodable> value) {
             return put(key, Json.of(value));
         }
 
-        default Builder put(java.lang.String key, JsonEncodable value) {
+        default Builder put(String key, @Nullable JsonEncodable value) {
             return put(key, Json.of(value));
         }
 
-        default Builder put(java.lang.String key, JsonObject value) {
+        default Builder put(String key, @Nullable JsonObject value) {
             return put(key, (JsonEncodable) value);
         }
 
-        default Builder put(java.lang.String key, JsonArray value) {
+        default Builder put(String key, @Nullable JsonArray value) {
             return put(key, (JsonEncodable) value);
         }
 
-        Builder putAll(Map<java.lang.String, ? extends JsonEncodable> values);
+        Builder putAll(Map<java.lang.String, ? extends @Nullable JsonEncodable> values);
 
         JsonObject build();
 

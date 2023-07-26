@@ -11,6 +11,8 @@ import java.math.BigDecimal;
 
 /**
  * Represents a number in the json data model.
+ *
+ * @author <a href="ethan@mccue.dev">Ethan McCue</a>
  */
 public sealed abstract class JsonNumber
         extends Number

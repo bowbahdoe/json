@@ -3,8 +3,10 @@ package dev.mccue.json;
 
 import dev.mccue.json.internal.ArrayBuilderImpl;
 import dev.mccue.json.internal.ArrayImpl;
+import org.jspecify.annotations.Nullable;
 
 import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
@@ -30,13 +32,13 @@ public sealed interface JsonArray extends Json, List<Json> permits ArrayImpl {
     }
 
     sealed interface Builder extends JsonEncodable permits ArrayBuilderImpl {
-        Builder add(Json value);
-        Builder addAll(Collection<? extends JsonEncodable> value);
-        default Builder add(JsonEncodable value) {
+        Builder add(@Nullable Json value);
+        Builder addAll(Collection<? extends @Nullable JsonEncodable> value);
+        default Builder add(@Nullable JsonEncodable value) {
             return add(Json.of(value));
         }
 
-        default Builder add(BigDecimal value) {
+        default Builder add(@Nullable BigDecimal value) {
             return add(Json.of(value));
         }
 
@@ -56,27 +58,27 @@ public sealed interface JsonArray extends Json, List<Json> permits ArrayImpl {
             return add(Json.of(value));
         }
 
-        default Builder add(java.lang.Double value) {
+        default Builder add(@Nullable Double value) {
             return add(Json.of(value));
         }
 
-        default Builder add(java.lang.Long value) {
+        default Builder add(@Nullable Long value) {
             return add(Json.of(value));
         }
 
-        default Builder add(Float value) {
+        default Builder add(@Nullable Float value) {
             return add(Json.of(value));
         }
 
-        default Builder add(Integer value) {
+        default Builder add(@Nullable Integer value) {
             return add(Json.of(value));
         }
 
-        default Builder add(java.math.BigInteger value) {
+        default Builder add(@Nullable BigInteger value) {
             return add(Json.of(value));
         }
 
-        default Builder add(java.lang.String value) {
+        default Builder add(@Nullable String value) {
             return add(Json.of(value));
         }
 
@@ -96,7 +98,7 @@ public sealed interface JsonArray extends Json, List<Json> permits ArrayImpl {
             return add(Json.of(b));
         }
 
-        default Builder add(java.lang.Boolean b) {
+        default Builder add(@Nullable Boolean b) {
             return add(Json.of(b));
         }
 

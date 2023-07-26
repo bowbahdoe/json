@@ -8,6 +8,7 @@ import dev.mccue.json.JsonNumber;
 import dev.mccue.json.JsonReadException;
 import dev.mccue.json.stream.JsonStreamReadOptions;
 import dev.mccue.json.stream.JsonValueHandler;
+import org.jspecify.annotations.Nullable;
 
 import java.io.IOException;
 import java.io.PushbackReader;
@@ -16,8 +17,6 @@ import java.math.BigInteger;
 
 public final class JsonReaderMethods {
     private JsonReaderMethods() {}
-
-    public static final int MINIMUM_PUSHBACK_BUFFER_SIZE = 64;
 
     /**
      * Expects to be called with the head of the stream AFTER the
@@ -63,8 +62,10 @@ public final class JsonReaderMethods {
         };
     }
 
-    private static String slowReadString(PushbackReader stream, String alreadyRead) throws IOException {
-        var buffer = new StringBuilder(alreadyRead);
+    private static String readQuotedString(PushbackReader stream) throws IOException {
+        // Expects to be called with the head of the stream AFTER the
+        // opening quotation mark.
+        var buffer = new StringBuilder();
         while (true) {
             var c = stream.read();
             if (c < 0) {
@@ -78,44 +79,6 @@ public final class JsonReaderMethods {
                     break;
                 default:
                     buffer.append((char) c);
-            }
-        }
-    }
-
-    private static String readQuotedString(PushbackReader stream) throws IOException {
-        // Expects to be called with the head of the stream AFTER the
-        // opening quotation mark.
-        var buffer = new char[MINIMUM_PUSHBACK_BUFFER_SIZE];
-        int read = stream.read(buffer, 0, MINIMUM_PUSHBACK_BUFFER_SIZE);
-        int endIndex = read - 1;
-        if (read < 0) {
-            throw JsonReadException.unexpectedEOFInsideString();
-        }
-
-        int i = 0;
-        while (true) {
-            var c = buffer[i];
-            switch (c) {
-                case '"': {
-                    var off = i + 1;
-                    var len = read - off;
-                    stream.unread(buffer, off, len);
-                    return new String(buffer, 0, i);
-                }
-                case '\\': {
-                    var off = i;
-                    var len = read - off;
-                    stream.unread(buffer, off, len);
-                    return slowReadString(stream, new String(buffer, 0, i));
-                }
-                default:
-                    if (i == endIndex) {
-                        stream.unread(c);
-                        return slowReadString(stream, new String(buffer, 0, i));
-                    }
-                    else {
-                        i++;
-                    }
             }
         }
     }
@@ -369,7 +332,7 @@ public final class JsonReaderMethods {
         }
     }
 
-    private static /* @Nullable */ String readKey(PushbackReader stream) throws IOException {
+    private static @Nullable String readKey(PushbackReader stream) throws IOException {
         var c = nextToken(stream);
         if (c == '\"') {
             var key = readQuotedString(stream);
