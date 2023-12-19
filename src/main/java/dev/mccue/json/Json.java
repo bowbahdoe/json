@@ -79,7 +79,7 @@ public sealed interface Json
      * @return An instance of {@link Json}.
      */
     static Json of(@Nullable BigDecimal value) {
-        return value == null ? JsonNull.instance() : new BigDecimalImpl(value);
+        return value == null ? JsonNull.instance() : JsonNumber.of(value);
     }
 
     /**
@@ -89,7 +89,7 @@ public sealed interface Json
      * @return An instance of {@link Json}.
      */
     static Json of(double value) {
-        return new DoubleImpl(value);
+        return JsonNumber.of(value);
     }
 
     /**
@@ -99,7 +99,7 @@ public sealed interface Json
      * @return An instance of {@link Json}.
      */
     static Json of(long value) {
-        return new LongImpl(value);
+        return JsonNumber.of(value);
     }
 
     /**
@@ -109,7 +109,7 @@ public sealed interface Json
      * @return An instance of {@link Json}.
      */
     static Json of(float value) {
-        return new DoubleImpl(value);
+        return JsonNumber.of(value);
     }
 
     /**
@@ -119,7 +119,7 @@ public sealed interface Json
      * @return An instance of {@link Json}.
      */
     static Json of(int value) {
-        return new LongImpl(value);
+        return JsonNumber.of(value);
     }
 
     /**
@@ -129,7 +129,7 @@ public sealed interface Json
      * @return An instance of {@link Json}.
      */
     static Json of(@Nullable Double value) {
-        return value == null ? JsonNull.instance() : new DoubleImpl(value);
+        return value == null ? JsonNull.instance() : of((double) value);
     }
 
     /**
@@ -139,7 +139,7 @@ public sealed interface Json
      * @return An instance of {@link Json}.
      */
     static Json of(@Nullable Long value) {
-        return value == null ? JsonNull.instance() : new LongImpl(value);
+        return value == null ? JsonNull.instance() : of((long) value);
     }
 
     /**
@@ -149,7 +149,7 @@ public sealed interface Json
      * @return An instance of {@link Json}.
      */
     static Json of(@Nullable Float value) {
-        return value == null ? JsonNull.instance() : new DoubleImpl(value);
+        return value == null ? JsonNull.instance() : of((float) value);
     }
 
     /**
@@ -159,7 +159,7 @@ public sealed interface Json
      * @return An instance of {@link Json}.
      */
     static Json of(@Nullable Integer value) {
-        return value == null ? JsonNull.instance() : new LongImpl(value);
+        return value == null ? JsonNull.instance() : of((int) value);
     }
 
     /**
@@ -169,7 +169,7 @@ public sealed interface Json
      * @return An instance of {@link Json}.
      */
     static Json of(@Nullable BigInteger value) {
-        return value == null ? JsonNull.instance() : new BigIntegerImpl(value);
+        return value == null ? JsonNull.instance() : JsonNumber.of(value);
     }
 
     /**

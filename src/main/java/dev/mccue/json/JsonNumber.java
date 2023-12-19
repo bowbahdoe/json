@@ -1,9 +1,7 @@
 package dev.mccue.json;
 
-import dev.mccue.json.internal.BigDecimalImpl;
-import dev.mccue.json.internal.BigIntegerImpl;
-import dev.mccue.json.internal.DoubleImpl;
-import dev.mccue.json.internal.LongImpl;
+import dev.mccue.json.internal.JsonDecimalImpl;
+import dev.mccue.json.internal.JsonIntegerImpl;
 import dev.mccue.json.stream.JsonGenerator;
 
 import java.io.Serial;
@@ -16,8 +14,7 @@ import java.math.BigDecimal;
  */
 public sealed abstract class JsonNumber
         extends Number
-        implements Json
-        permits BigDecimalImpl, DoubleImpl, LongImpl, BigIntegerImpl {
+        implements Json permits JsonDecimal, JsonInteger {
     @Serial
     private static final long serialVersionUID = 1L;
 
@@ -35,28 +32,40 @@ public sealed abstract class JsonNumber
 
     public abstract boolean isIntegral();
 
-    public static JsonNumber of(BigDecimal value) {
-        return new BigDecimalImpl(value);
+    public static JsonDecimal of(BigDecimal value) {
+        return new JsonDecimalImpl(value.toString());
     }
 
-    public static JsonNumber of(double value) {
-        return new DoubleImpl(value);
+    public static JsonDecimal of(double value) {
+        if (Double.isInfinite(value)) {
+            throw new IllegalArgumentException("JSON cannot encode an infinite value");
+        }
+        if (Double.isNaN(value)) {
+            throw new IllegalArgumentException("JSON cannot encode a NaN");
+        }
+        return new JsonDecimalImpl(BigDecimal.valueOf(value).toString());
     }
 
-    public static JsonNumber of(long value) {
-        return new LongImpl(value);
+    public static JsonInteger of(long value) {
+        return new JsonIntegerImpl(BigDecimal.valueOf(value).toString());
     }
 
-    public static JsonNumber of(float value) {
-        return new DoubleImpl(value);
+    public static JsonDecimal of(float value) {
+        if (Float.isInfinite(value)) {
+            throw new IllegalArgumentException("JSON cannot encode an infinite value");
+        }
+        if (Float.isNaN(value)) {
+            throw new IllegalArgumentException("JSON cannot encode a NaN");
+        }
+        return new JsonDecimalImpl(BigDecimal.valueOf(value).toString());
     }
 
-    public static JsonNumber of(int value) {
-        return new LongImpl(value);
+    public static JsonInteger of(int value) {
+        return new JsonIntegerImpl(BigDecimal.valueOf(value).toString());
     }
 
-    public static JsonNumber of(java.math.BigInteger value) {
-        return new BigIntegerImpl(value);
+    public static JsonInteger of(java.math.BigInteger value) {
+        return new JsonIntegerImpl(new BigDecimal(value).toString());
     }
 
     @Override

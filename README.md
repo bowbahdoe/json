@@ -6,7 +6,7 @@
 
 A Java JSON Library intended to be easy to learn and simple to teach.
 
-Requires Java 17+.
+Requires Java 21+.
 
 ## Dependency Information
 
@@ -16,7 +16,7 @@ Requires Java 17+.
 <dependency>
     <groupId>dev.mccue</groupId>
     <artifactId>json</artifactId>
-    <version>0.2.4</version>
+    <version>0.3.0</version>
 </dependency>
 ```
 
@@ -24,7 +24,7 @@ Requires Java 17+.
 
 ```
 dependencies {
-    implementation("dev.mccue:json:0.2.4")
+    implementation("dev.mccue:json:0.3.0")
 }
 ```
 

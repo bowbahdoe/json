@@ -2,18 +2,16 @@ package dev.mccue.json.internal;
 
 
 import dev.mccue.json.Json;
-import dev.mccue.json.JsonReadOptions;
-import dev.mccue.json.stream.JsonArrayHandler;
 import dev.mccue.json.JsonNumber;
 import dev.mccue.json.JsonReadException;
+import dev.mccue.json.JsonReadOptions;
+import dev.mccue.json.stream.JsonArrayHandler;
 import dev.mccue.json.stream.JsonStreamReadOptions;
 import dev.mccue.json.stream.JsonValueHandler;
 import org.jspecify.annotations.Nullable;
 
 import java.io.IOException;
 import java.io.PushbackReader;
-import java.math.BigDecimal;
-import java.math.BigInteger;
 
 public final class JsonReaderMethods {
     private JsonReaderMethods() {}
@@ -84,28 +82,14 @@ public final class JsonReaderMethods {
     }
 
     private static JsonNumber readInteger(String string) {
-        if (string.length() < 18) { // definitely fits in a Long
-            return JsonNumber.of(Long.parseLong(string));
-        }
-        else {
-            try {
-                return JsonNumber.of(Long.parseLong(string));
-            } catch (NumberFormatException __) {
-                return JsonNumber.of(new BigInteger(string));
-            }
-        }
+        return new JsonIntegerImpl(string);
     }
 
-    private static JsonNumber readDecimal(String string, boolean bigDecimal) {
-        if (bigDecimal) {
-            return new BigDecimalImpl(new BigDecimal(string));
-        }
-        else {
-            return new DoubleImpl(Double.parseDouble(string));
-        }
+    private static JsonNumber readDecimal(String string) {
+        return new JsonDecimalImpl(string);
     }
 
-    private static JsonNumber readNumber(PushbackReader stream, boolean bigDecimal) throws IOException {
+    private static JsonNumber readNumber(PushbackReader stream) throws IOException {
         var buffer = new StringBuilder();
 
         enum Stage {
@@ -304,7 +288,7 @@ public final class JsonReaderMethods {
         }
 
         if (isDecimal) {
-            return readDecimal(buffer.toString(), bigDecimal);
+            return readDecimal(buffer.toString());
         }
         else {
             return readInteger(buffer.toString());
@@ -448,7 +432,7 @@ public final class JsonReaderMethods {
         switch (c) {
             case '-', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9' -> {
                 stream.unread(c);
-                valueHandler.onNumber(readNumber(stream, options.useBigDecimals()));
+                valueHandler.onNumber(readNumber(stream));
             }
             case '"' -> {
                 valueHandler.onString(readQuotedString(stream));
@@ -498,7 +482,7 @@ public final class JsonReaderMethods {
 
     public static Json read(PushbackReader stream, JsonReadOptions options) throws IOException {
         var handler = new Handlers.BaseTreeValueHandler();
-        readStream(stream, false, new JsonStreamReadOptions(options.useBigDecimals()), handler);
+        readStream(stream, false, new JsonStreamReadOptions(), handler);
         if (handler.result == null && options.eofBehavior() == JsonReadOptions.EOFBehavior.THROW_EXCEPTION) {
             throw JsonReadException.unexpectedEOF();
         }

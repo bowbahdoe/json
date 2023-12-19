@@ -1,32 +1,12 @@
 package dev.mccue.json.internal;
 
 import dev.mccue.json.*;
-import dev.mccue.json.internal.*;
 
 import java.io.IOException;
 import java.util.IdentityHashMap;
 
 public final class JsonWriter {
     public JsonWriter() {}
-    private interface Writer {
-        void write(Json v, Appendable out, OptionsWithIndentDepth options) throws IOException;
-    }
-
-    private static final IdentityHashMap<Class<? extends Json>, Writer> WRITERS;
-
-    static {
-        WRITERS = new IdentityHashMap<>();
-        WRITERS.put(JsonNull.class, (__, out, ___) -> out.append("null"));
-        WRITERS.put(JsonTrue.class, (__, out, ___) -> out.append("true"));
-        WRITERS.put(JsonFalse.class, (__, out, ___) -> out.append("false"));
-        WRITERS.put(LongImpl.class, (v, out, ___) -> out.append(v.toString()));
-        WRITERS.put(DoubleImpl.class, (v, out, ___) -> out.append(v.toString()));
-        WRITERS.put(BigIntegerImpl.class, (v, out, ___) -> out.append(v.toString()));
-        WRITERS.put(BigDecimalImpl.class, (v, out, ___) -> out.append(v.toString()));
-        WRITERS.put(StringImpl.class, (v, out, options) -> writeString((JsonString) v, out, options));
-        WRITERS.put(ArrayImpl.class, (v, out, options) -> writeArray((JsonArray) v, out, options));
-        WRITERS.put(ObjectImpl.class, (v, out, options) -> writeObject((JsonObject) v, out, options));
-    }
 
     private static final short[] CODEPOINT_DECODER;
 
@@ -203,7 +183,15 @@ public final class JsonWriter {
 
 
     static void write(Json v, Appendable out, OptionsWithIndentDepth options) throws IOException {
-        WRITERS.get(v.getClass()).write(v, out, options);
+        switch (v) {
+            case JsonNull __ -> out.append("null");
+            case JsonTrue __ -> out.append("true");
+            case JsonFalse __ -> out.append("false");
+            case JsonNumber number -> out.append(number.toString());
+            case JsonString string -> writeString(string, out, options);
+            case JsonArray array -> writeArray(array, out, options);
+            case JsonObject object -> writeObject(object, out, options);
+        }
     }
 
     public record OptionsWithIndentDepth(

@@ -6,17 +6,17 @@
 
     <groupId>dev.mccue</groupId>
     <artifactId>json</artifactId>
-    <version>0.2.4</version>
+    <version>0.3.0</version>
     <packaging>jar</packaging>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <maven.compiler.source>17</maven.compiler.source>
-        <maven.compiler.target>17</maven.compiler.target>
+        <maven.compiler.source>21</maven.compiler.source>
+        <maven.compiler.target>21</maven.compiler.target>
     </properties>
 
     <name>json</name>
-    <description>Dead simple Java JSON API based on sealed interfaces.</description>
+    <description>A Java JSON Library intended to be easy to learn and simple to teach.</description>
     <url>https://github.com/bowbahdoe/json</url>
 
     <developers>
@@ -63,10 +63,9 @@
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>3.8.1</version>
                 <configuration>
-                    <source>17</source>
-                    <target>17</target>
+                    <source>21</source>
+                    <target>21</target>
                     <compilerArgs>
-                        <arg>-Xlint:all</arg>
                         <arg>-Werror</arg>
                     </compilerArgs>
                 </configuration>

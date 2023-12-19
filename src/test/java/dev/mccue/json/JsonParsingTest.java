@@ -3,13 +3,14 @@ package dev.mccue.json;
 import org.junit.jupiter.api.Test;
 
 import java.io.StringReader;
+import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.*;
 
 public final class JsonParsingTest {
     @Test
@@ -337,4 +338,42 @@ public final class JsonParsingTest {
                 forms
         );
     }
+
+    @Test
+    public void testExtremelyBigNumber() {
+        assertEquals(
+                JsonDecimal.of(new BigDecimal("1231231234124125412532523452345.4325342523452353245345345")),
+                Json.readString("1231231234124125412532523452345.4325342523452353245345345")
+        );
+    }
+
+    @Test
+    public void testNumberEquivalences() {
+        assertEquals(
+                Json.of(new BigInteger("3")),
+                Json.of(new BigDecimal("3"))
+        );
+
+        assertNotEquals(
+                Json.of(new BigInteger("3")),
+                Json.of(new BigDecimal("3.0"))
+        );
+
+        assertEquals(
+                Json.of(new BigInteger("3")),
+                Json.of(3)
+        );
+
+        assertNotEquals(
+                Json.of(3.0),
+                Json.of(3)
+        );
+
+        assertEquals(
+                Json.of(3.0f),
+                Json.of(3.0)
+        );
+    }
+
+
 }

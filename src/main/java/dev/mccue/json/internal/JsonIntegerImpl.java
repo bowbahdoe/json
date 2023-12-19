@@ -1,30 +1,30 @@
 package dev.mccue.json.internal;
 
 import dev.mccue.json.Json;
-import dev.mccue.json.JsonNumber;
+import dev.mccue.json.JsonInteger;
 import dev.mccue.json.serialization.JsonSerializationProxy;
 
 import java.io.Serial;
-import java.util.Objects;
+import java.math.BigInteger;
 
-@ValueCandidate
-public final class BigIntegerImpl extends JsonNumber {
+public final class JsonIntegerImpl extends JsonInteger {
     @Serial
     private static final long serialVersionUID = 1L;
-    private final java.math.BigInteger bigIntegerValue;
 
-    public BigIntegerImpl(java.math.BigInteger bigIntegerValue) {
-        this.bigIntegerValue = Objects.requireNonNull(bigIntegerValue, "value must not be null");
+    private final String value;
+
+    public JsonIntegerImpl(String value) {
+        this.value = value;
     }
 
     @Override
     public java.math.BigDecimal bigDecimalValue() {
-        return new java.math.BigDecimal(bigIntegerValue);
+        return new java.math.BigDecimal(bigIntegerValue());
     }
 
     @Override
     public java.math.BigInteger bigIntegerValue() {
-        return bigIntegerValue;
+        return new BigInteger(value);
     }
 
     @Override
@@ -34,12 +34,12 @@ public final class BigIntegerImpl extends JsonNumber {
 
     @Override
     public long longValueExact() {
-        return bigIntegerValue.longValueExact();
+        return bigIntegerValue().longValueExact();
     }
 
     @Override
     public java.math.BigInteger bigIntegerValueExact() {
-        return bigIntegerValue;
+        return bigIntegerValue();
     }
 
     @Override
@@ -49,40 +49,27 @@ public final class BigIntegerImpl extends JsonNumber {
 
     @Override
     public int intValue() {
-        return bigIntegerValue.intValue();
+        return Integer.parseInt(value);
     }
 
     @Override
     public long longValue() {
-        return bigIntegerValue.longValue();
+        return Long.parseLong(value);
     }
 
     @Override
     public float floatValue() {
-        return bigIntegerValue.floatValue();
+        return Float.parseFloat(value);
     }
 
     @Override
     public double doubleValue() {
-        return bigIntegerValue.doubleValue();
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        return (this == o) || (
-                o instanceof BigIntegerImpl otherBigInteger &&
-                        this.bigIntegerValue.equals(otherBigInteger.bigIntegerValue)
-        );
-    }
-
-    @Override
-    public int hashCode() {
-        return this.bigIntegerValue.hashCode();
+        return Double.parseDouble(value);
     }
 
     @Override
     public java.lang.String toString() {
-        return this.bigIntegerValue.toString();
+        return this.value;
     }
 
     @Serial
