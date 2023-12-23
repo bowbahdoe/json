@@ -156,70 +156,66 @@ public sealed abstract class JsonDecodeException extends RuntimeException {
     }
 
     private static String getMessageHelp(JsonDecodeException error, ArrayList<String> context) {
-        if (error instanceof AtField atField) {
-            var fieldName = atField.fieldName();
-            var err = atField.error();
+        switch (error) {
+            case AtField atField -> {
+                var fieldName = atField.fieldName();
+                var err = atField.error();
 
-            boolean isSimple;
-            if (fieldName.isEmpty()) {
-                isSimple = false;
-            }
-            else {
-                isSimple = Character.isAlphabetic(fieldName.charAt(0));
-                for (int i = 1; i < fieldName.length(); i++) {
-                    isSimple = isSimple && (Character.isAlphabetic(fieldName.charAt(i)) || Character.isDigit(fieldName.charAt(i)));
-                }
-            }
-
-            fieldName = isSimple ? "." + fieldName : "[" + fieldName + "]";
-
-            context.add(fieldName);
-
-            return getMessageHelp(err, context);
-        }
-        else if (error instanceof AtIndex atIndex) {
-            var indexName = "[" + atIndex.index() + "]";
-            context.add(indexName);
-            return getMessageHelp(atIndex.error(), context);
-        }
-        else if (error instanceof OneOf oneOf) {
-            if (oneOf.errors().isEmpty()) {
-                return "Ran into oneOf with no possibilities" + (context.isEmpty() ? "!" : " at json" + String.join("", context));
-            }
-            else if (oneOf.errors().size() == 1) {
-                return getMessageHelp(oneOf.errors().get(0), context);
-            }
-            else {
-                var starter = (context.isEmpty() ? "oneOf" : "oneOf at json" + String.join("", context));
-                var introduction = starter + " failed in the following " + oneOf.errors().size() + " ways:";
-                var msg = new StringBuilder(introduction + "\n\n");
-                for (int i = 0; i < oneOf.errors().size(); i++) {
-                    msg.append("\n\n(");
-                    msg.append(i + 1);
-                    msg.append(") ");
-                    msg.append(indent(getMessage(oneOf.errors().get(i))));
-                    if (i != oneOf.errors().size() - 1) {
-                        msg.append("\n\n");
+                boolean isSimple;
+                if (fieldName.isEmpty()) {
+                    isSimple = false;
+                } else {
+                    isSimple = Character.isAlphabetic(fieldName.charAt(0));
+                    for (int i = 1; i < fieldName.length(); i++) {
+                        isSimple = isSimple && (Character.isAlphabetic(fieldName.charAt(i)) || Character.isDigit(fieldName.charAt(i)));
                     }
                 }
 
-                return msg.toString();
+                fieldName = isSimple ? "." + fieldName : "[" + fieldName + "]";
+
+                context.add(fieldName);
+
+                return getMessageHelp(err, context);
             }
-        }
-        else if (error instanceof Failure failure) {
-            var msg = failure.getMessage();
-            var json = failure.value;
+            case AtIndex atIndex -> {
+                var indexName = "[" + atIndex.index() + "]";
+                context.add(indexName);
+                return getMessageHelp(atIndex.error(), context);
+            }
+            case OneOf oneOf -> {
+                if (oneOf.errors().isEmpty()) {
+                    return "Ran into oneOf with no possibilities" + (context.isEmpty() ? "!" : " at json" + String.join("", context));
+                } else if (oneOf.errors().size() == 1) {
+                    return getMessageHelp(oneOf.errors().get(0), context);
+                } else {
+                    var starter = (context.isEmpty() ? "oneOf" : "oneOf at json" + String.join("", context));
+                    var introduction = starter + " failed in the following " + oneOf.errors().size() + " ways:";
+                    var msg = new StringBuilder(introduction + "\n\n");
+                    for (int i = 0; i < oneOf.errors().size(); i++) {
+                        msg.append("\n\n(");
+                        msg.append(i + 1);
+                        msg.append(") ");
+                        msg.append(indent(getMessage(oneOf.errors().get(i))));
+                        if (i != oneOf.errors().size() - 1) {
+                            msg.append("\n\n");
+                        }
+                    }
 
-            var introduction  = (
-                    context.isEmpty()
-                            ? "Problem with the given value:\n\n    "
-                            :  "Problem with the value at json" + String.join("", context) +  ":\n\n    "
-            );
+                    return msg.toString();
+                }
+            }
+            case Failure failure -> {
+                var msg = failure.getMessage();
+                var json = failure.value;
 
-            return introduction + indent(Json.writeString(json, new JsonWriteOptions().withIndentation(4))) + "\n\n" + msg;
-        }
-        else {
-            throw new IllegalStateException();
+                var introduction = (
+                        context.isEmpty()
+                                ? "Problem with the given value:\n\n    "
+                                : "Problem with the value at json" + String.join("", context) + ":\n\n    "
+                );
+
+                return introduction + indent(Json.writeString(json, new JsonWriteOptions().withIndentation(4))) + "\n\n" + msg;
+            }
         }
     }
 

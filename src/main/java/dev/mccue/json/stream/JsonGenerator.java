@@ -27,38 +27,17 @@ public interface JsonGenerator {
     void writeNull();
 
     default void write(JsonEvent event) {
-        if (event instanceof JsonEvent.ObjectStart) {
-            this.writeObjectStart();
-        }
-        else if (event instanceof JsonEvent.ObjectEnd) {
-            this.writeObjectEnd();
-        }
-        else if (event instanceof JsonEvent.ArrayStart) {
-            this.writeArrayStart();
-        }
-        else if (event instanceof JsonEvent.ArrayEnd) {
-            this.writeArrayEnd();
-        }
-        else if (event instanceof JsonEvent.Field field) {
-            this.writeFieldName(field.name());
-        }
-        else if (event instanceof JsonEvent.String) {
-            this.writeNull();
-        }
-        else if (event instanceof JsonEvent.Number) {
-            this.writeNull();
-        }
-        else if (event instanceof JsonEvent.True) {
-            this.writeTrue();
-        }
-        else if (event instanceof JsonEvent.False) {
-            this.writeFalse();
-        }
-        else if (event instanceof JsonEvent.Null) {
-            this.writeNull();
-        }
-        else {
-            throw new IllegalStateException();
+        switch (event) {
+            case JsonEvent.ObjectStart __ -> this.writeObjectStart();
+            case JsonEvent.ObjectEnd __ -> this.writeObjectEnd();
+            case JsonEvent.ArrayStart __ -> this.writeArrayStart();
+            case JsonEvent.ArrayEnd __ -> this.writeArrayEnd();
+            case JsonEvent.Field field -> this.writeFieldName(field.name());
+            case JsonEvent.String string -> this.writeString(string.value());
+            case JsonEvent.Number number -> this.writeNumber(number.value());
+            case JsonEvent.True __ -> this.writeTrue();
+            case JsonEvent.False __ -> this.writeFalse();
+            case JsonEvent.Null __ -> this.writeNull();
         }
     }
 
