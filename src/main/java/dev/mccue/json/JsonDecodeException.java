@@ -155,7 +155,7 @@ public sealed abstract class JsonDecodeException extends RuntimeException {
         return String.join("\n    ", string.split("\n"));
     }
 
-    private static String getMessageHelp(JsonDecodeException error, ArrayList<String> context) {
+    private static String getMessageHelp(JsonDecodeException error, ArrayList<String> context, boolean deep) {
         switch (error) {
             case AtField atField -> {
                 var fieldName = atField.fieldName();
@@ -175,31 +175,47 @@ public sealed abstract class JsonDecodeException extends RuntimeException {
 
                 context.add(fieldName);
 
-                return getMessageHelp(err, context);
+                return getMessageHelp(err, context, deep);
             }
             case AtIndex atIndex -> {
                 var indexName = "[" + atIndex.index() + "]";
                 context.add(indexName);
-                return getMessageHelp(atIndex.error(), context);
+                return getMessageHelp(atIndex.error(), context, deep);
             }
             case OneOf oneOf -> {
                 if (oneOf.errors().isEmpty()) {
                     return "Ran into oneOf with no possibilities" + (context.isEmpty() ? "!" : " at json" + String.join("", context));
                 } else if (oneOf.errors().size() == 1) {
-                    return getMessageHelp(oneOf.errors().get(0), context);
+                    return getMessageHelp(oneOf.errors().get(0), context, deep);
                 } else {
-                    var starter = (context.isEmpty() ? "oneOf" : "oneOf at json" + String.join("", context));
-                    var introduction = starter + " failed in the following " + oneOf.errors().size() + " ways:";
-                    var msg = new StringBuilder(introduction + "\n\n");
-                    for (int i = 0; i < oneOf.errors().size(); i++) {
-                        msg.append("\n\n(");
-                        msg.append(i + 1);
-                        msg.append(") ");
-                        msg.append(indent(getMessage(oneOf.errors().get(i))));
-                        if (i != oneOf.errors().size() - 1) {
-                            msg.append("\n\n");
+                    var msg = new StringBuilder();
+                    if (deep) {
+                        var starter = (context.isEmpty() ? "oneOf" : "oneOf at json" + String.join("", context));
+                        var introduction = starter + " failed in the following " + oneOf.errors().size() + " ways:";
+                        msg.append(introduction);
+                        msg.append("\n\n");
+                        for (int i = 0; i < oneOf.errors().size(); i++) {
+                            msg.append("\n\n(");
+                            msg.append(i + 1);
+                            msg.append(") ");
+                            msg.append(indent(getMessage(oneOf.errors().get(i))));
+                            if (i != oneOf.errors().size() - 1) {
+                                msg.append("\n\n");
+                            }
                         }
                     }
+                    else {
+                        var starter = (context.isEmpty() ? "oneOf" : "oneOf at json" + String.join("", context));
+                        var introduction = starter + " failed in the following " + oneOf.errors().size() + " ways:";
+                        msg.append(introduction);
+                        for (int i = 0; i < oneOf.errors().size(); i++) {
+                            msg.append("\n - (");
+                            msg.append(i + 1);
+                            msg.append(") ");
+                            msg.append(getMessage(oneOf.errors().get(i)));
+                        }
+                    }
+
 
                     return msg.toString();
                 }
@@ -208,18 +224,34 @@ public sealed abstract class JsonDecodeException extends RuntimeException {
                 var msg = failure.getMessage();
                 var json = failure.value;
 
-                var introduction = (
-                        context.isEmpty()
-                                ? "Problem with the given value:\n\n    "
-                                : "Problem with the value at json" + String.join("", context) + ":\n\n    "
-                );
 
-                return introduction + indent(Json.writeString(json, new JsonWriteOptions().withIndentation(4))) + "\n\n" + msg;
+
+                if (deep) {
+                    var introduction = (
+                            context.isEmpty()
+                                    ? "Problem with the given value:\n\n    "
+                                    : "Problem with the value at json" + String.join("", context) + ":\n\n    "
+                    );
+
+                    return introduction + indent(Json.writeString(json, new JsonWriteOptions().withIndentation(4))) + "\n\n" + msg;
+                }
+                else {
+                    var introduction = (
+                            context.isEmpty()
+                                    ? "Problem with the given value: "
+                                    : "Problem with the value at json" + String.join("", context) + ": "
+                    );
+                    return introduction + failure.getMessage();
+                }
             }
         }
     }
 
+    public String getDetailedMessage() {
+        return getMessageHelp(this, new ArrayList<>(), true);
+    }
+
     protected static String getMessage(JsonDecodeException error) {
-        return getMessageHelp(error, new ArrayList<>());
+        return getMessageHelp(error, new ArrayList<>(), false);
     }
 }

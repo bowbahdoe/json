@@ -476,6 +476,14 @@ public sealed interface Json
         }
     }
 
+    static Json read(CharSequence jsonText) throws JsonReadException {
+        return readString(jsonText);
+    }
+
+    static Json read(CharSequence jsonText, JsonReadOptions options) throws JsonReadException {
+        return readString(jsonText, options);
+    }
+
     static Json read(Reader reader, JsonReadOptions options) throws IOException, JsonReadException {
         return JsonReaderMethods.readFullyConsume(
                 new PushbackReader(reader),
@@ -543,6 +551,14 @@ public sealed interface Json
 
     static String writeString(@Nullable JsonEncodable jsonEncodable, JsonWriteOptions options) {
         return writeString(Json.of(jsonEncodable), options);
+    }
+
+    static String write(@Nullable JsonEncodable jsonEncodable) {
+        return writeString(jsonEncodable);
+    }
+
+    static String write(@Nullable JsonEncodable jsonEncodable, JsonWriteOptions options) {
+        return writeString(jsonEncodable, options);
     }
 
     private static void write(Json json, Writer writer, JsonWriteOptions options) throws IOException {

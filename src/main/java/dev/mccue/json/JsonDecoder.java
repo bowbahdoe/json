@@ -57,6 +57,10 @@ public interface JsonDecoder<T extends @Nullable Object> {
         }
     }
 
+    static JsonDecoder<String> string() {
+        return JsonDecoder::string;
+    }
+
     static boolean boolean_(Json json) throws JsonDecodeException {
         if (!(json instanceof JsonBoolean jsonBoolean)) {
             throw JsonDecodeException.of(
@@ -66,6 +70,10 @@ public interface JsonDecoder<T extends @Nullable Object> {
         } else {
             return jsonBoolean.value();
         }
+    }
+
+    static JsonDecoder<Boolean> boolean_() {
+        return JsonDecoder::boolean_;
     }
 
     static int int_(Json json) throws JsonDecodeException {
@@ -91,6 +99,10 @@ public interface JsonDecoder<T extends @Nullable Object> {
         }
     }
 
+    static JsonDecoder<Integer> int_() {
+        return JsonDecoder::int_;
+    }
+
     static long long_(Json json) throws JsonDecodeException {
         if (!(json instanceof JsonNumber jsonNumber)) {
             throw JsonDecodeException.of(
@@ -114,6 +126,10 @@ public interface JsonDecoder<T extends @Nullable Object> {
         }
     }
 
+    static JsonDecoder<Long> long_() {
+        return JsonDecoder::long_;
+    }
+
     static float float_(Json json) throws JsonDecodeException {
         if (!(json instanceof JsonNumber jsonNumber)) {
             throw JsonDecodeException.of(
@@ -125,6 +141,10 @@ public interface JsonDecoder<T extends @Nullable Object> {
         }
     }
 
+    static JsonDecoder<Float> float_() {
+        return JsonDecoder::float_;
+    }
+
     static double double_(Json json) throws JsonDecodeException {
         if (!(json instanceof JsonNumber jsonNumber)) {
             throw JsonDecodeException.of(
@@ -134,6 +154,10 @@ public interface JsonDecoder<T extends @Nullable Object> {
         } else {
             return jsonNumber.doubleValue();
         }
+    }
+
+    static JsonDecoder<Double> double_() {
+        return JsonDecoder::double_;
     }
 
     static BigInteger bigInteger(Json json) throws JsonDecodeException {
@@ -154,6 +178,10 @@ public interface JsonDecoder<T extends @Nullable Object> {
         }
     }
 
+    static JsonDecoder<BigInteger> bigInteger() {
+        return JsonDecoder::bigInteger;
+    }
+
     static BigDecimal bigDecimal(Json json) throws JsonDecodeException {
         if (!(json instanceof JsonNumber jsonNumber)) {
             throw JsonDecodeException.of(
@@ -165,7 +193,11 @@ public interface JsonDecoder<T extends @Nullable Object> {
         }
     }
 
-    static <@Nullable T> T null_(Json json) throws JsonDecodeException {
+    static JsonDecoder<BigDecimal> bigDecimal() {
+        return JsonDecoder::bigDecimal;
+    }
+
+    static <T extends @Nullable Object> T null_(Json json) throws JsonDecodeException {
         if (!(json instanceof JsonNull)) {
             throw JsonDecodeException.of(
                     "expected null",
@@ -174,6 +206,10 @@ public interface JsonDecoder<T extends @Nullable Object> {
         } else {
             return null;
         }
+    }
+
+    static <T extends @Nullable Object> JsonDecoder<T> null_() {
+        return JsonDecoder::null_;
     }
 
     static <T extends @Nullable Object> T null_(Json json, T value) throws JsonDecodeException {
@@ -202,6 +238,10 @@ public interface JsonDecoder<T extends @Nullable Object> {
         } else {
             return jsonArray;
         }
+    }
+
+    static JsonDecoder<JsonArray> array() {
+        return JsonDecoder::array;
     }
 
     static <T extends @Nullable Object> List<T> array(Json json, JsonDecoder<? extends T> itemDecoder) throws JsonDecodeException {
@@ -235,6 +275,10 @@ public interface JsonDecoder<T extends @Nullable Object> {
         } else {
             return jsonObject;
         }
+    }
+
+    static JsonDecoder<JsonObject> object() {
+        return JsonDecoder::object;
     }
 
     static <T extends @Nullable Object> JsonDecoder<Map<String, T>> object(JsonDecoder<? extends T> valueDecoder) throws JsonDecodeException {
