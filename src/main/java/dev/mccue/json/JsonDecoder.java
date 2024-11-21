@@ -577,4 +577,12 @@ public interface JsonDecoder<T extends @Nullable Object> {
             throw JsonDecodeException.oneOf(Collections.unmodifiableList(errors));
         }
     }
+
+    static Json any(Json json) {
+        return json;
+    }
+
+    static JsonDecoder<Json> any() {
+        return JsonDecoder::any;
+    }
 }

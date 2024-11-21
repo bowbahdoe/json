@@ -6,7 +6,7 @@
 
     <groupId>dev.mccue</groupId>
     <artifactId>json</artifactId>
-    <version>2024.11.17</version>
+    <version>2024.11.20</version>
     <packaging>jar</packaging>
 
     <properties>
@@ -31,22 +31,21 @@
     <licenses>
         <license>
             <name>Apache License, Version 2.0</name>
-            <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+            <url>https://www.apache.org/licenses/LICENSE-2.0.txt</url>
         </license>
     </licenses>
 
     <scm>
         <connection>scm:git:git://github.com/bowbahdoe/json.git</connection>
         <developerConnection>scm:git:ssh://github.com:bowbahdoe/json.git</developerConnection>
-        <url>http://github.com/bowbahdoe/json/tree/main</url>
+        <url>https://github.com/bowbahdoe/json/tree/main</url>
     </scm>
 
     <dependencies>
         <dependency>
             <groupId>org.jspecify</groupId>
             <artifactId>jspecify</artifactId>
-            <version>0.3.0</version>
-            <scope>provided</scope>
+            <version>1.0.0</version>
         </dependency>
         <dependency>
             <groupId>org.junit.jupiter</groupId>
