@@ -16,7 +16,7 @@ Requires Java 21+.
 <dependency>
     <groupId>dev.mccue</groupId>
     <artifactId>json</artifactId>
-    <version>2024.11.17</version>
+    <version>2024.11.20</version>
 </dependency>
 ```
 
@@ -24,7 +24,7 @@ Requires Java 21+.
 
 ```
 dependencies {
-    implementation("dev.mccue:json:2023.12.23")
+    implementation("dev.mccue:json:2024.11.20")
 }
 ```
 
